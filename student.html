@@ -5,13 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./styles/global.css">
-    <link rel="stylesheet" href="./styles/student.css">
+    <link rel="stylesheet" href="./styles/dashboard.css">
     <!--<script src="./scripts/login.js" type="module"></script>--> 
 </head>
 <body>
     <header>
        <!--THis is from the old project, I dont think we need a home <a href="./index.html">Go Home</a>-->
        <div class="logo-container"><img src="./images/white_uwec_logo.png" alt="uwec logo"></div>
+       <!--Quick temp links, will be deleted-->
+       <div class="temp">
+            <a href="login.html">Log in screen</a>
+            <a href="student.html">Student view</a>
+            <a href="faculty.html" >Faculty view</a>
+       </div>
     </header>
     
     <div class="custom-shape-divider-top-1760377864">
@@ -19,9 +25,74 @@
         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
     </div>
 
-    <main class="login-container">
-        <noscript>Please enable scripts in your browser.</noscript>
+        <!--Everything needed on student page:
+        Personal info:
 
-    </main>
+        Student name (cant edit)
+        Student's bluegold id (cant edit)
+        Phone (student can edit)
+        Email (student can edit)
+        Address (student can edit)
+
+        Academic info:
+        Gpa (cant edit)
+        total credits (cant edit)
+        account balance (cant edit)
+
+        account info:
+        username and password???? 
+        -->
+       
+    <section id="dashboard_container">
+    <h1>Hello Blugold!</h1>
+
+    <div class="dashboard-split">
+        <!-- Personal Info -->
+        <div class="info-card">
+        <h3>Personal Information</h3>
+
+        <p><strong>Name:</strong> Fake Blugold</p>
+        <p><strong>Blugold ID:</strong> 1234567</p>
+        <hr>
+
+        <label>
+            <strong>Phone:</strong>
+            <input type="text" value="(111) 111-1111" disabled>
+        </label>
+
+        <label>
+            <strong>Email:</strong>
+            <input type="email" value="fakeblugold@uwec.edu" disabled>
+        </label>
+
+        <label>
+            <strong>Address:</strong>
+            <input type="text" value="123 College Ave, Eau Claire, WI" disabled>
+        </label>
+
+        <button type="button" class="edit-btn">Edit</button>
+        </div>
+
+        <!-- Academic Info -->
+        <div class="info-card">
+        <h3>Academic Information</h3>
+        <p><strong>GPA:</strong> 0.00</p>
+        <p><strong>Total Credits:</strong> 0</p>
+        <p><strong>Account Balance:</strong> $0.00</p>
+
+        <hr>
+
+        <h3>Account</h3>
+        <p><strong>Username:</strong> fakeblugold@uwec.edu</p>
+        <p><strong>Password:</strong> •••••••••</p>
+
+        <br>
+
+        <button type="button" id="logoutBtn">Log Out</button>
+        </div>
+    </div>
+
+    </section>
+
 </body>
 </html>

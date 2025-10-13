@@ -25,6 +25,14 @@ p, h1, h3{
     font-family: Arial, Helvetica, sans-serif;
 }
 
+.temp{
+    width: 200px;
+    height: auto;
+    padding:0;
+    background-color: #ebab21;
+    color: #2b3594;
+}
+
 h2 {
     color: #2b3594;
     font-family: Arial, Helvetica, sans-serif;
@@ -130,12 +138,20 @@ header{
 
 /*wave css*/
 .custom-shape-divider-top-1760377864 {
-    
+    position: sticky;
     top: 0;
     left: 0;
     width: 100%;
     overflow: hidden;
     line-height: 0;
+    z-index: 7;
+    /*
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+    */
 }
 
 .custom-shape-divider-top-1760377864 svg {
@@ -173,6 +189,11 @@ button, .formbtn{
     border-radius: 3px;
     border:none;
     margin:0.5rem;
+}
+
+button:hover {
+     background-color: #ebab21;
+     cursor: pointer;
 }
 
 /*

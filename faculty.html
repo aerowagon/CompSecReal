@@ -5,23 +5,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./styles/global.css">
-    <link rel="stylesheet" href="./styles/faculty.css">
+    <link rel="stylesheet" href="./styles/dashboard.css">
     <!--<script src="./scripts/login.js" type="module"></script>--> 
 </head>
 <body>
     <header>
-       <!--THis is from the old project, I dont think we need a home <a href="./index.html">Go Home</a>-->
        <div class="logo-container"><img src="./images/white_uwec_logo.png" alt="uwec logo"></div>
+       <!--Quick temp links, will be deleted-->
+       <div class="temp">
+            <a href="login.html">Log in screen</a>
+            <a href="student.html">Student view</a>
+            <a href="faculty.html" >Faculty view</a>
+       </div>
     </header>
     
     <div class="custom-shape-divider-top-1760377864">
         <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
     </div>
+    
+        <!--Everything needed on faculty page:
+        Faculty personal information:
+        Name, Id, contact info (can edit): phone, email, address
 
-    <main class="login-container">
-        <noscript>Please enable scripts in your browser.</noscript>
+        Faculty job:
 
-    </main>
+        Has a list of students? (the assignment says that we need to allow faculty
+        to enter update and retrieve a student’s information):
+
+        - can select student and see their :
+
+        Student's bluegold id (cant edit)
+        Phone (cant edit)
+        Email (cant edit)
+        Address (cant edit)
+        Student name (cant edit)
+
+        Academic info:
+        Gpa (can edit)
+        total credits (can edit)
+        check student's balance
+        add charges/fees/tuition? 
+
+        Create student:
+        - allows faculty to create a student, however besides the name, the student should fill in personal info, bluegold id
+        should be generated randomly (right?), and maybe right away they can add the gpa, credits, balance, and add any fees/charges
+        to their account 
+        -->
+    <section id="dashboard_container">
+        <h1>Hello Blugold Faculty!</h1>
+
+        <div class="dashboard-split">
+            <!-- Personal Info -->
+            <div class="info-card">
+            <h3>Personal Information</h3>
+
+            <p><strong>Name:</strong> Fake Blugold</p>
+            <p><strong>Faculty ID:</strong> 1234567</p>
+        
+
+            <label>
+                <strong>Phone:</strong>
+                <input type="text" value="(111) 111-1111" disabled>
+            </label>
+
+            <label>
+                <strong>Email:</strong>
+                <input type="email" value="fakeblugold@uwec.edu" disabled>
+            </label>
+
+            <label>
+                <strong>Address:</strong>
+                <input type="text" value="123 College Ave, Eau Claire, WI" disabled>
+            </label>
+
+            <button type="button" class="edit-btn">Edit</button>
+            
+            <!--Account info-->
+            <br>
+            <h3>Account</h3>
+            <p><strong>Username:</strong> fakeblugold@uwec.edu</p>
+            <p><strong>Password:</strong> •••••••••</p>
+            <br>
+            <button type="button" id="logoutBtn">Log Out</button>
+            
+            </div>
+            
+
+            <!--Faculty student controls/views????-->
+            <!--Creating a student-->
+            <div class="info-card">
+                <h3>Student Account Creation</h3>
+                <button type="button" id="logoutBtn">Create Student</button>
+
+                <!--Viewing enrolled students-->
+                <!--I'm adding this assuming a list is how we are integrating the faculty viewing students-->
+                
+                <h3>Enrolled Students</h3>
+                <p>Select a student to view or edit details.</p>
+                <div class="student-list">
+                    <div class="student-item">
+                        <p>Fake student 1</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 2</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 2</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 4</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 5</p>
+                    <button class="view-btn">View</button></div>
+
+                    <div class="student-item">
+                        <p>Fake student 6</p>
+                    <button class="view-btn">View</button></div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 7</p>
+                    <button class="view-btn">View</button></div>
+
+                    <div class="student-item">
+                        <p>Fake student 8</p>
+                    <button class="view-btn">View</button></div>
+                    
+
+
+                    </div>
+                </div>
+
+        </div>
+    </section>
 </body>
 </html>
