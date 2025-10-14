@@ -2,10 +2,15 @@ CREATE TABLE sessions (
 	id INT auto_increment PRIMARY KEY,
 	email varchar(255) NOT NULL,
 	sess_token int NOT NULL
-)
+);
+
+CREATE TABLE users(
+    sys_ID int PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    email varchar(255) NOT NULL
+);
 
 CREATE TABLE students (
-	sys_ID int AUTO_INCREMENT NOT NULL,
+	sys_ID int,
 	blugold_ID int NOT NULL,
 	email varchar(255) NOT NULL,
 	f_name varchar(255) NOT NULL,
@@ -20,7 +25,7 @@ CREATE TABLE students (
 );
 
 CREATE TABLE professors (
-	sys_ID int AUTO_INCREMENT NOT NULL,
+	sys_ID int,
 	email varchar(255) NOT NULL,
 	f_name varchar(255) NOT NULL,
 	l_name varchar(255) NOT NULL,
