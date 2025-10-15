@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Add New User</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f0f0f5;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 15px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <form action="/add-user" method="POST">
+    <h2>Add New User</h2>
+
+    <label for="username">Username (email)</label>
+    <input type="email" id="username" name="email" required>
+
+    <label for="password">Temporary Password</label>
+    <input type="text" id="password" name="password" required>
+
+    <label for="fname">First Name</label>
+    <input type="text" id="fname" name="f_name" required>
+
+    <label for="lname">Last Name</label>
+    <input type="text" id="lname" name="l_name" required>
+
+    <label for="blugold_id">Blugold ID</label>
+    <input type="number" id="blugold_id" name="blugold_ID" required>
+
+    <label for="address">Street Address</label>
+    <input type="text" id="address" name="address">
+
+    <label for="city">City</label>
+    <input type="text" id="city" name="city">
+
+    <label for="add_city">Additional Address (optional)</label>
+    <input type="text" id="add_city" name="add_city">
+
+    <label for="zip">ZIP Code</label>
+    <input type="number" id="zip" name="zip_code">
+
+    <label for="role">Assign Role</label>
+    <select id="role" name="role" required>
+      <option value="">-- Select Role --</option>
+      <option value="student">Student</option>
+      <option value="faculty">Faculty</option>
+    </select>
+
+    <button type="submit">Create User</button>
+  </form>
+
+  <script>
+  const form = document.querySelector('form');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch('/add-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      console.log('Server Response:', result);
+
+      if (response.ok) {
+        alert('User added successfully!');
+        form.reset();
+      } else {
+        alert('Error: ' + result.message);
+      }
+    } catch (err) {
+      console.error('Request failed:', err);
+    }
+  });
+
+/// check if can get data back 
+  fetch('/list-users')
+  .then(res => res.json())
+  .then(data => console.log('Users:', data));
+
+</script>
+
+
+</body>
+</html>

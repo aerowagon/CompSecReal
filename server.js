@@ -51,6 +51,85 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
+app.post('/add-user', (req, res) => {
+  const {
+    email,
+    password,
+    f_name,
+    l_name,
+    blugold_ID,
+    address,
+    city,
+    add_city,
+    zip_code,
+    role
+  } = req.body;
+
+  if (!email || !password || !f_name || !l_name || !role) {
+    return res.status(400).json({ message: 'Missing required fields.' });
+  }
+
+  // Step 1: Insert into `users`
+  const insertUser = 'INSERT INTO users (email) VALUES (?)';
+  db.query(insertUser, [email], (err, userResult) => {
+    if (err) {
+      console.error('Insert user error:', err);
+      return res.status(500).json({ message: 'Failed to insert user' });
+    }
+
+    const sys_ID = userResult.insertId;
+
+    // Step 2: Insert into `authentication`
+    const insertAuth = 'INSERT INTO authentication (email, password) VALUES (?, ?)';
+    db.query(insertAuth, [email, password], (err, authResult) => {
+      if (err) {
+        console.error('Insert auth error:', err);
+        return res.status(500).json({ message: 'Failed to insert authentication' });
+      }
+
+      // Step 3: Insert into role-specific table
+      let roleQuery = '';
+      const commonParams = [sys_ID, email, f_name, l_name, null, address || '', city || '', add_city || '', zip_code || null];
+
+      if (role === 'student') {
+        roleQuery = 'INSERT INTO students (sys_ID, blugold_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        commonParams.splice(1, 0, blugold_ID); // insert blugold_ID after sys_ID
+      } else if (role === 'faculty') {
+        roleQuery = 'INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      } else {
+        return res.status(400).json({ message: 'Invalid role specified' });
+      }
+
+      db.query(roleQuery, commonParams, (err, roleResult) => {
+        if (err) {
+          console.error('Insert role error:', err);
+          return res.status(500).json({ message: 'Failed to insert into role table' });
+        }
+
+        return res.status(200).json({ message: 'User successfully added' });
+      });
+    });
+  });
+});
+
+app.get('/list-users', (req, res) => {
+  const query = 'SELECT * FROM users';
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching users:', err);
+      return res.status(500).json({ message: 'Error fetching users' });
+    }
+
+    console.log('All users:', results); // Log to server console
+    res.status(200).json(results);      // Send to client
+  });
+});
+
+
+
+
+
 
  /** 
   * MySQLRoot Password: 1qaz
@@ -59,5 +138,14 @@ app.listen(port, () => {
   * 
   * port = 3000;
   * http://localhost:3000/login.html
+  * http://localhost:3000/admin.html
+  * 
+  * /// mySQL  /////
+  * C:\Users\Hagard>cd C:\Program Files\MySQL\MySQL Server 8.0\bin
+  * mysql -u user -p
+  * 
+  * /// Node.js  ///////
+  * cd C:\Users\Hagard\Documents\GitHub\CompSecReal
+  * node server.js
   * 
   * */   
