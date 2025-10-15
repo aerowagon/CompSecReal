@@ -7,3 +7,14 @@ Oct 13th push, Maggie J:
 - Created student and faculty html pages.
 - made css style more themed towards project (UWEC page)
 Any styling/theme changes I did can be changed/switched, I just wanted to get stuff up, and I figured since the assignment is geared towards blugolds why not use the already crafted theme our university has.
+
+Oct 14th push, James
+- made server.js
+-  used nmp to make package-lock.json and package.json
+- got server running and have a database on my computer.
+- updated login.html to use .js code (will extract later)
+- verified info went from login.html to mysql database.
+
+what still need is function to move to page after login
+responce indicating something happend.
+

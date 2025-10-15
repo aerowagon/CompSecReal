@@ -1,53 +1,63 @@
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql');
 const path = require('path');
-
 const app = express();
 const port = 3000;
 
-// Middleware to read JSON from POST requests
+// Parse form and JSON
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (HTML, CSS, JS, images) from current folder
+// Serve static files from the current directory
 app.use(express.static(path.join(__dirname)));
 
-// MySQL connection setup
+// Connect to MySQL
 const db = mysql.createConnection({
   host: 'localhost',
-  user: 'user',        //  change this
-  password: 'password', //  change this
-  database: 'database',  // change this
+  user: 'user',
+  password: '',       // If you set a password during install, use it here
+  database: 'compsec'
 });
 
-db.connect(err => {
+db.connect((err) => {
   if (err) {
-    console.error(' Database connection failed:', err.stack);
-    return;
+    console.error('Database connection failed:', err);
+  } else {
+    console.log('Connected to MySQL database.');
   }
-  console.log(' Connected to database.');
 });
 
-// POST /login handler
+// Handle login POST request
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
-  const sql = 'SELECT * FROM authentication WHERE email = ? AND password = ?';
-  db.query(sql, [email, password], (err, results) => {
+  const query = 'SELECT * FROM authentication WHERE email = ? AND password = ?';
+  db.query(query, [email, password], (err, results) => {
     if (err) {
-      console.error('Database error:', err);
-      res.status(500).json({ message: 'Server error' });
-      return;
+      console.error('Query error:', err);
+      return res.status(500).send('Server error');
     }
 
     if (results.length > 0) {
-      res.json({ message: 'Login successful!' });
+      res.send('Login successful!');
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).send('Invalid email or password.');
     }
   });
 });
 
 // Start the server
 app.listen(port, () => {
-  console.log(`\ Server running at http://localhost:${port}/`);
+  console.log(`Server running at http://localhost:${port}/`);
 });
+
+
+ /** 
+  * MySQLRoot Password: 1qaz
+  * user name = user
+  * password =       (it is blank)
+  * 
+  * port = 3000;
+  * http://localhost:3000/login.html
+  * 
+  * */   
