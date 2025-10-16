@@ -18,3 +18,18 @@ Oct 14th push, James
 what still need is function to move to page after login
 responce indicating something happend.
 
+Oct 15th push, james
+- made admin page alowing adding of studetents
+    (linked from faculty 'create student' button)
+- updated server.js too:
+    - push new user to database
+    - pull student name from data base to student list in faculty
+- updated faculty page with js to allow students in database to be put to list
+    (still need to contain size of list)
+- updated login page to allow:
+    * faculty to log in
+    * students to log in
+    * give error messeage upon wrong username or password
+
+
+    

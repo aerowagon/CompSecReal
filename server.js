@@ -27,24 +27,6 @@ db.connect((err) => {
   }
 });
 
-// Handle login POST request
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-
-  const query = 'SELECT * FROM authentication WHERE email = ? AND password = ?';
-  db.query(query, [email, password], (err, results) => {
-    if (err) {
-      console.error('Query error:', err);
-      return res.status(500).send('Server error');
-    }
-
-    if (results.length > 0) {
-      res.send('Login successful!');
-    } else {
-      res.status(401).send('Invalid email or password.');
-    }
-  });
-});
 
 // Start the server
 app.listen(port, () => {
@@ -64,6 +46,8 @@ app.post('/add-user', (req, res) => {
     zip_code,
     role
   } = req.body;
+
+///////////////////  admin page ////////////////////////////////
 
   if (!email || !password || !f_name || !l_name || !role) {
     return res.status(400).json({ message: 'Missing required fields.' });
@@ -126,6 +110,94 @@ app.get('/list-users', (req, res) => {
   });
 });
 
+/////////// faculty page////////////////////////
+
+//to get names of students for 
+app.get('/get-students', (req, res) => {
+  const query = 'SELECT f_name, l_name, blugold_ID FROM students';
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Failed to fetch students:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    res.json(results); // returns an array of student objects
+  });
+});
+
+
+
+/////////// login page  /////////////
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  // Step 1: Check authentication
+  const authQuery = 'SELECT * FROM authentication WHERE email = ? AND password = ?';
+  db.query(authQuery, [email, password], (err, authResults) => {
+    if (err) {
+      console.error('Auth error:', err);
+      return res.status(500).json({ message: 'Server error during login.' });
+    }
+
+    if (authResults.length === 0) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    // Step 2: Get sys_ID from users table
+    const userQuery = 'SELECT sys_ID FROM users WHERE email = ?';
+    db.query(userQuery, [email], (err, userResults) => {
+      if (err) {
+        console.error('User lookup error:', err);
+        return res.status(500).json({ message: 'Server error during user lookup.' });
+      }
+
+      if (userResults.length === 0) {
+        return res.status(403).json({ message: 'User not registered in system.' });
+      }
+
+      const sysID = userResults[0].sys_ID;
+
+      // Step 3: Check if sys_ID is in students
+      const studentQuery = 'SELECT * FROM students WHERE sys_ID = ?';
+      db.query(studentQuery, [sysID], (err, studentResults) => {
+        if (err) {
+          console.error('Student lookup error:', err);
+          return res.status(500).json({ message: 'Server error checking student role.' });
+        }
+
+        if (studentResults.length > 0) {
+          return res.json({
+            message: 'Login successful as student',
+            redirectTo: 'student.html'
+          });
+        }
+
+        // Step 4: Check if sys_ID is in professors
+        const profQuery = 'SELECT * FROM professors WHERE sys_ID = ?';
+        db.query(profQuery, [sysID], (err, profResults) => {
+          if (err) {
+            console.error('Professor lookup error:', err);
+            return res.status(500).json({ message: 'Server error checking professor role.' });
+          }
+
+          if (profResults.length > 0) {
+            return res.json({
+              message: 'Login successful as faculty',
+              redirectTo: 'faculty.html'
+            });
+          }
+
+          // If sys_ID found but not tied to student or professor
+          return res.status(403).json({ message: 'User has no associated role.' });
+        });
+      });
+    });
+  });
+});
+
+
 
 
 
@@ -141,7 +213,7 @@ app.get('/list-users', (req, res) => {
   * http://localhost:3000/admin.html
   * 
   * /// mySQL  /////
-  * C:\Users\Hagard>cd C:\Program Files\MySQL\MySQL Server 8.0\bin
+  * cd  C:\Program Files\MySQL\MySQL Server 8.0\bin
   * mysql -u user -p
   * 
   * /// Node.js  ///////

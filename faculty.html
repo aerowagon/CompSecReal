@@ -22,6 +22,7 @@
     <div class="custom-shape-divider-top-1760377864">
         <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
         <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+        </svg>
     </div>
     
         <!--Everything needed on faculty page:
@@ -87,7 +88,7 @@
             <p><strong>Username:</strong> fakeblugold@uwec.edu</p>
             <p><strong>Password:</strong> •••••••••</p>
             <br>
-            <button type="button" id="logoutBtn">Log Out</button>
+            <button type="button" id="logoutBtn" onclick="window.location.href='login.html' ">Log Out</button>
             
             </div>
             
@@ -96,13 +97,17 @@
             <!--Creating a student-->
             <div class="info-card">
                 <h3>Student Account Creation</h3>
-                <button type="button" id="logoutBtn">Create Student</button>
+                <button type="button" id="CreateStudent" onclick="window.location.href='admin.html' ">Create Student</button>
 
                 <!--Viewing enrolled students-->
                 <!--I'm adding this assuming a list is how we are integrating the faculty viewing students-->
                 
                 <h3>Enrolled Students</h3>
                 <p>Select a student to view or edit details.</p>
+                
+                <div class="student-list" id="studentList"></div>
+
+ <!-- removed old student list               
                 <div class="student-list">
                     <div class="student-item">
                         <p>Fake student 1</p>
@@ -144,8 +149,48 @@
 
                     </div>
                 </div>
+-->
 
         </div>
     </section>
+
+            <script>
+        // Fetch students from backend and display them
+        async function loadStudents() {
+            try {
+            const res = await fetch('/get-students');
+            const students = await res.json();
+
+            const studentList = document.getElementById('studentList');
+            studentList.innerHTML = ''; // clear any existing content
+
+            students.forEach(student => {
+                const studentItem = document.createElement('div');
+                studentItem.className = 'student-item';
+
+                studentItem.innerHTML = `
+                <p>${student.f_name} ${student.l_name}</p>
+                <button class="view-btn" data-id="${student.blugold_ID}">View</button>
+                `;
+
+                // Optional: add click handler
+                studentItem.querySelector('.view-btn').addEventListener('click', () => {
+                console.log('Clicked student ID:', student.blugold_ID);
+                // Future: load student details or navigate
+                });
+
+                studentList.appendChild(studentItem);
+            });
+
+            } catch (err) {
+            console.error('Failed to load students:', err);
+            }
+        }
+
+        // Run on page load
+        loadStudents();
+        </script>
+
+
 </body>
 </html>
