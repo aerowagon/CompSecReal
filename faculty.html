@@ -59,6 +59,30 @@
         <div class="dashboard-split">
             <!-- Personal Info -->
             <div class="info-card">
+                <h3>Personal Information</h3>
+                <p><strong>Name:</strong> <span id="facultyName"></span></p>
+                <p><strong>Faculty ID:</strong> <span id="facultyID"></span></p>
+
+                <label>
+                <strong>Phone:</strong>
+                <input type="text" id="facultyPhone" disabled>
+                </label>
+
+                <label>
+                <strong>Email:</strong>
+                <input type="email" id="facultyEmail" disabled>
+                </label>
+
+                <label>
+                <strong>Address:</strong>
+                <input type="text" id="facultyAddress" disabled>
+                </label>
+
+                <button type="button" class="edit-btn">Edit</button>
+
+
+
+ <!-- old faculty info
             <h3>Personal Information</h3>
 
             <p><strong>Name:</strong> Fake Blugold</p>
@@ -81,7 +105,9 @@
             </label>
 
             <button type="button" class="edit-btn">Edit</button>
-            
+
+ old faculty info       -->            
+
             <!--Account info-->
             <br>
             <h3>Account</h3>
@@ -104,7 +130,7 @@
                 
                 <h3>Enrolled Students</h3>
                 <p>Select a student to view or edit details.</p>
-                
+                <!--New student list that pulls from database -->
                 <div class="student-list" id="studentList"></div>
 
  <!-- removed old student list               
@@ -173,11 +199,11 @@
                 <button class="view-btn" data-id="${student.blugold_ID}">View</button>
                 `;
 
-                // Optional: add click handler
+                // Goto selected student
                 studentItem.querySelector('.view-btn').addEventListener('click', () => {
-                console.log('Clicked student ID:', student.blugold_ID);
-                // Future: load student details or navigate
+                    window.open(`editStudent.html?blugold_ID=${student.blugold_ID}`, '_blank');
                 });
+
 
                 studentList.appendChild(studentItem);
             });
@@ -186,8 +212,32 @@
             console.error('Failed to load students:', err);
             }
         }
+        async function loadFacultyInfo() {
+    const sys_ID = localStorage.getItem('user_sys_ID');
+    if (!sys_ID) {
+      console.warn('No sys_ID found in localStorage');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/faculty-info/${sys_ID}`);
+      const faculty = await res.json();
+
+      // Populate DOM elements
+      document.getElementById('facultyName').textContent = `${faculty.f_name} ${faculty.l_name}`;
+      document.getElementById('facultyID').textContent = sys_ID;
+      document.getElementById('facultyEmail').value = faculty.email;
+      document.getElementById('facultyAddress').value = `${faculty.address || ''} ${faculty.city || ''} ${faculty.add_city || ''} ${faculty.zip_code || ''}`;
+      document.getElementById('facultyPhone').value = '(Not stored yet)'; // If you decide to add phone to DB later
+    } catch (err) {
+      console.error('Failed to load faculty info:', err);
+    }
+  }
+
+  loadFacultyInfo()
 
         // Run on page load
+        loadFacultyInfo()
         loadStudents();
         </script>
 

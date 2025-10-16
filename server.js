@@ -112,6 +112,30 @@ app.get('/list-users', (req, res) => {
 
 /////////// faculty page////////////////////////
 
+
+// get faculty info 
+app.get('/faculty-info/:sys_ID', (req, res) => {
+  const { sys_ID } = req.params;
+  const query = `
+    SELECT * FROM professors WHERE sys_ID = ?
+  `;
+
+  db.query(query, [sys_ID], (err, results) => {
+    if (err) {
+      console.error('Failed to fetch faculty:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Faculty not found' });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+
+
 //to get names of students for 
 app.get('/get-students', (req, res) => {
   const query = 'SELECT f_name, l_name, blugold_ID FROM students';
@@ -123,6 +147,30 @@ app.get('/get-students', (req, res) => {
     }
 
     res.json(results); // returns an array of student objects
+  });
+});
+
+// Goto student page
+app.get('/student/:blugold_ID', (req, res) => {
+  const { blugold_ID } = req.params;
+  const query = `
+    SELECT s.*, b.credit 
+    FROM students s 
+    LEFT JOIN bank b ON s.sys_ID = b.sys_ID 
+    WHERE blugold_ID = ?
+  `;
+
+  db.query(query, [blugold_ID], (err, results) => {
+    if (err) {
+      console.error('Failed to fetch student by ID:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.json(results[0]);
   });
 });
 
@@ -157,11 +205,11 @@ app.post('/login', (req, res) => {
         return res.status(403).json({ message: 'User not registered in system.' });
       }
 
-      const sysID = userResults[0].sys_ID;
+      const sys_ID = userResults[0].sys_ID;
 
       // Step 3: Check if sys_ID is in students
       const studentQuery = 'SELECT * FROM students WHERE sys_ID = ?';
-      db.query(studentQuery, [sysID], (err, studentResults) => {
+      db.query(studentQuery, [sys_ID], (err, studentResults) => {
         if (err) {
           console.error('Student lookup error:', err);
           return res.status(500).json({ message: 'Server error checking student role.' });
@@ -170,13 +218,15 @@ app.post('/login', (req, res) => {
         if (studentResults.length > 0) {
           return res.json({
             message: 'Login successful as student',
-            redirectTo: 'student.html'
+            redirectTo: 'student.html',
+            email,
+            sys_ID
           });
         }
 
         // Step 4: Check if sys_ID is in professors
         const profQuery = 'SELECT * FROM professors WHERE sys_ID = ?';
-        db.query(profQuery, [sysID], (err, profResults) => {
+        db.query(profQuery, [sys_ID], (err, profResults) => {
           if (err) {
             console.error('Professor lookup error:', err);
             return res.status(500).json({ message: 'Server error checking professor role.' });
@@ -185,7 +235,9 @@ app.post('/login', (req, res) => {
           if (profResults.length > 0) {
             return res.json({
               message: 'Login successful as faculty',
-              redirectTo: 'faculty.html'
+              redirectTo: 'faculty.html',
+              email,
+              sys_ID
             });
           }
 
@@ -196,6 +248,39 @@ app.post('/login', (req, res) => {
     });
   });
 });
+
+////////////////// editStudent.html ////////////////////////
+
+app.put('/update-student/:blugold_ID', (req, res) => {
+  const { blugold_ID } = req.params;
+  const { GPA, credit } = req.body;
+
+  // Update GPA in students table
+  const updateStudent = 'UPDATE students SET GPA = ? WHERE blugold_ID = ?';
+  db.query(updateStudent, [GPA, blugold_ID], (err) => {
+    if (err) {
+      console.error('Failed to update GPA:', err);
+      return res.status(500).json({ message: 'Failed to update GPA' });
+    }
+
+    // Update credit in bank table
+    const updateBank = `
+      UPDATE bank 
+      JOIN students ON bank.sys_ID = students.sys_ID 
+      SET credit = ? 
+      WHERE students.blugold_ID = ?
+    `;
+    db.query(updateBank, [credit, blugold_ID], (err) => {
+      if (err) {
+        console.error('Failed to update credits:', err);
+        return res.status(500).json({ message: 'Failed to update credits' });
+      }
+
+      res.json({ message: 'Student updated successfully' });
+    });
+  });
+});
+
 
 
 

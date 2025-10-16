@@ -31,5 +31,19 @@ Oct 15th push, james
     * students to log in
     * give error messeage upon wrong username or password
 
+Oct 16th push, james
+- made editStudent.html
+    (open from faculty view "student" button)
+- can now edit gpa and credits
+- link form login to faculty shows personl info from database.
+
+
+
+Promblems need to fix.
+- (sec) going back and forward still has you get back to accout
+- (sec) password not hashed , encoded or anything else in data base
+
+- database GPA  is an int. (3.5 rounds to 4)
+- database credit is an int. ( only recoreds dollars no cents)
 
     
