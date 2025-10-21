@@ -45,5 +45,7 @@ Promblems need to fix.
 
 - database GPA  is an int. (3.5 rounds to 4)
 - database credit is an int. ( only recoreds dollars no cents)
+- gpa and credit not displayed
+- need to update student view. 
 
     
