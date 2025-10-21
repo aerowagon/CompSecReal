@@ -54,5 +54,6 @@ Promblems need to fix.
 - database credit is an int. ( only recoreds dollars no cents)
 - gpa and credit not displayed
 - need to update student view. 
+- Time stamps need to be added.
 
     
