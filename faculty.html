@@ -111,7 +111,7 @@
             <!--Account info-->
             <br>
             <h3>Account</h3>
-            <p><strong>Username:</strong> fakeblugold@uwec.edu</p>
+            <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
             <p><strong>Password:</strong> •••••••••</p>
             <br>
             <button type="button" id="logoutBtn" onclick="window.location.href='login.html' ">Log Out</button>
@@ -213,26 +213,30 @@
             }
         }
         async function loadFacultyInfo() {
-    const sys_ID = localStorage.getItem('user_sys_ID');
-    if (!sys_ID) {
-      console.warn('No sys_ID found in localStorage');
-      return;
-    }
+            const sys_ID = localStorage.getItem('user_sys_ID');
+            if (!sys_ID) {
+                console.warn('No sys_ID found in localStorage');
+                return;
+            }
 
-    try {
-      const res = await fetch(`/faculty-info/${sys_ID}`);
-      const faculty = await res.json();
+            try {
+                const res = await fetch(`/faculty-info/${sys_ID}`);
+                const faculty = await res.json();
 
-      // Populate DOM elements
-      document.getElementById('facultyName').textContent = `${faculty.f_name} ${faculty.l_name}`;
-      document.getElementById('facultyID').textContent = sys_ID;
-      document.getElementById('facultyEmail').value = faculty.email;
-      document.getElementById('facultyAddress').value = `${faculty.address || ''} ${faculty.city || ''} ${faculty.add_city || ''} ${faculty.zip_code || ''}`;
-      document.getElementById('facultyPhone').value = '(Not stored yet)'; // If you decide to add phone to DB later
-    } catch (err) {
-      console.error('Failed to load faculty info:', err);
-    }
-  }
+                // Populate DOM elements
+                document.getElementById('facultyName').textContent = `${faculty.f_name} ${faculty.l_name}`;
+                document.getElementById('facultyID').textContent = sys_ID;
+                document.getElementById('facultyEmail').value = faculty.email;
+                document.getElementById('facultyAddress').value = `${faculty.address || ''} ${faculty.city || ''} ${faculty.add_city || ''} ${faculty.zip_code || ''}`;
+                document.getElementById('facultyPhone').value = '(Not stored yet)';
+
+                // ✅ Set Username field
+                document.getElementById('usernameDisplay').textContent = `${faculty.f_name} ${faculty.l_name}`;
+
+            } catch (err) {
+                console.error('Failed to load faculty info:', err);
+            }
+            }
 
   loadFacultyInfo()
 

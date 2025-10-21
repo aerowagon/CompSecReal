@@ -52,23 +52,25 @@
         <div class="info-card">
         <h3>Personal Information</h3>
 
-        <p><strong>Name:</strong> Fake Blugold</p>
-        <p><strong>Blugold ID:</strong> 1234567</p>
+        <p><strong>Name:</strong> <span id="studentName"></span></p>
+        <p><strong>Blugold ID:</strong> <span id="studentBlugoldID"></span></p>
         <hr>
 
         <label>
             <strong>Phone:</strong>
-            <input type="text" value="(111) 111-1111" disabled>
+            <input type="text" id="studentPhone" disabled>
         </label>
 
         <label>
             <strong>Email:</strong>
-            <input type="email" value="fakeblugold@uwec.edu" disabled>
+            <input type="email" id="studentEmail" disabled>
+            <input type="text" id="studentAddress" disabled>
         </label>
 
         <label>
             <strong>Address:</strong>
-            <input type="text" value="123 College Ave, Eau Claire, WI" disabled>
+            <input type="email" id="studentEmail" disabled>
+            <input type="text" id="studentAddress" disabled>
         </label>
 
         <button type="button" class="edit-btn">Edit</button>
@@ -77,23 +79,74 @@
         <!-- Academic Info -->
         <div class="info-card">
         <h3>Academic Information</h3>
-        <p><strong>GPA:</strong> 0.00</p>
-        <p><strong>Total Credits:</strong> 0</p>
-        <p><strong>Account Balance:</strong> $0.00</p>
+        <p><strong>GPA:</strong> <span id="studentGPA"></span></p>
+        <p><strong>Total Credits:</strong> <span id="studentCredits"></span></p>
+        <p><strong>Account Balance:</strong> $<span id="studentBalance"></span></p>
 
         <hr>
 
         <h3>Account</h3>
-        <p><strong>Username:</strong> fakeblugold@uwec.edu</p>
+        <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
         <p><strong>Password:</strong> •••••••••</p>
 
         <br>
 
-        <button type="button" id="logoutBtn">Log Out</button>
+        <button type="button" id="logoutBtn" onclick="localStorage.clear(); window.location.href='login.html'">Log Out</button>
+
         </div>
     </div>
 
     </section>
+
+    <script>
+        async function loadStudentInfo() {
+            const sys_ID = localStorage.getItem('user_sys_ID');
+            if (!sys_ID) {
+                console.warn('No sys_ID found in localStorage');
+                return;
+            }
+
+            try {
+                // Step 1: Get student record using sys_ID
+                const res = await fetch(`/student-by-sysid/${sys_ID}`);
+                if (!res.ok) {
+                    throw new Error('Failed to fetch student info');
+                }
+
+                const student = await res.json();
+
+                // Log student data to debug
+                console.log(student); // Debug log to check the values
+
+                // Step 2: Populate fields
+                document.getElementById('studentName').textContent = `${student.f_name} ${student.l_name}`;
+                document.getElementById('studentBlugoldID').textContent = student.blugold_ID || 'N/A';
+                document.getElementById('studentPhone').value = '(Not stored)';
+                document.getElementById('studentEmail').value = student.email || '';
+                
+                // Concatenate address and handle empty values
+                document.getElementById('studentAddress').value = [
+                    student.address || '',
+                    student.city || '',
+                    student.add_city || '',
+                    student.zip_code || ''
+                ].filter(Boolean).join(' ');
+
+                document.getElementById('studentGPA').textContent = student.GPA || '0.00';
+                document.getElementById('studentCredits').textContent = student.credit || '0';
+                document.getElementById('studentBalance').textContent = student.credit || '0.00';
+                document.getElementById('usernameDisplay').textContent = student.email || '';
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+
+        // Run on load
+        loadStudentInfo();
+        </script>
+
 
 </body>
 </html>

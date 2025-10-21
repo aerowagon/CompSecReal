@@ -36,8 +36,8 @@
       document.getElementById('email').textContent = student.email;
       document.getElementById('blugold_ID').textContent = student.blugold_ID;
       document.getElementById('address').textContent = student.address;
-      document.getElementById('GPA').value = student.GPA || '';
-      document.getElementById('credit').value = student.credit || '';
+      document.getElementById('GPA').value = student.GPA ?? '';
+      document.getElementById('credit').value = student.credit ?? '';
     }
 
     document.getElementById('editStudentForm').addEventListener('submit', async (e) => {

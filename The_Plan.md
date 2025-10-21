@@ -37,6 +37,13 @@ Oct 16th push, james
 - can now edit gpa and credits
 - link form login to faculty shows personl info from database.
 
+oct 20th push james
+- update to student page to show current user.
+    (phone number and address do not work. phone number not in database)
+- updated server.js faculty, and editStudent to make perniment updates in database gpa and credit, show faculty user name
+
+
+
 
 
 Promblems need to fix.

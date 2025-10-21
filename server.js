@@ -90,8 +90,24 @@ app.post('/add-user', (req, res) => {
           return res.status(500).json({ message: 'Failed to insert into role table' });
         }
 
+        // If user is a student, also insert into bank table
+       if (role === 'student') {
+        const insertBank = 'INSERT INTO bank (sys_ID, credit) VALUES (?, ?)';
+        db.query(insertBank, [sys_ID, 0], (err, bankResult) => {
+          if (err) {
+            console.error('Insert bank error:', err);
+          } else {
+            console.log('Bank row inserted:', bankResult);
+          }
+        });
+}
+
         return res.status(200).json({ message: 'User successfully added' });
       });
+
+      
+      
+
     });
   });
 });
@@ -278,6 +294,32 @@ app.put('/update-student/:blugold_ID', (req, res) => {
 
       res.json({ message: 'Student updated successfully' });
     });
+  });
+});
+
+/////////////////// Student.html page  /////////////////
+
+
+app.get('/student-by-sysid/:sys_ID', (req, res) => {
+  const { sys_ID } = req.params;
+  const query = `
+    SELECT s.*, b.credit 
+    FROM students s 
+    LEFT JOIN bank b ON s.sys_ID = b.sys_ID 
+    WHERE s.sys_ID = ?
+  `;
+
+  db.query(query, [sys_ID], (err, results) => {
+    if (err) {
+      console.error('Failed to fetch student by sys_ID:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.json(results[0]);
   });
 });
 
