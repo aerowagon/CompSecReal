@@ -2,7 +2,8 @@ const express = require('express');
 const mysql = require('mysql');
 const path = require('path');
 const app = express();
-const port = 3000;
+const cookieParser = require('cookie-parser');
+const port = 8008;
 
 // Parse form and JSON
 app.use(express.json());
@@ -11,12 +12,22 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the current directory
 app.use(express.static(path.join(__dirname)));
 
+//use cookie parser to parse cookies yay
+app.use(cookieParser());
+
 // Connect to MySQL
 const db = mysql.createConnection({
   host: 'localhost',
-  user: 'user',
+  user: 'root',
   password: '',       // If you set a password during install, use it here
-  database: 'compsec'
+  database: 'compsec_project'
+});
+
+const authdb = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',       // If you set a password during install, use it here
+  database: 'compsec_project_auth'
 });
 
 db.connect((err) => {
@@ -26,7 +37,6 @@ db.connect((err) => {
     console.log('Connected to MySQL database.');
   }
 });
-
 
 // Start the server
 app.listen(port, () => {
@@ -65,7 +75,7 @@ app.post('/add-user', (req, res) => {
 
     // Step 2: Insert into `authentication`
     const insertAuth = 'INSERT INTO authentication (email, password) VALUES (?, ?)';
-    db.query(insertAuth, [email, password], (err, authResult) => {
+    authdb.query(insertAuth, [email, password], (err, authResult) => {
       if (err) {
         console.error('Insert auth error:', err);
         return res.status(500).json({ message: 'Failed to insert authentication' });
@@ -73,7 +83,7 @@ app.post('/add-user', (req, res) => {
 
       // Step 3: Insert into role-specific table
       let roleQuery = '';
-      const commonParams = [sys_ID, email, f_name, l_name, null, address || '', city || '', add_city || '', zip_code || null];
+      const commonParams = [sys_ID, email, f_name, l_name, 0, address || '', city || '', add_city || '', zip_code || null];
 
       if (role === 'student') {
         roleQuery = 'INSERT INTO students (sys_ID, blugold_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
@@ -104,9 +114,6 @@ app.post('/add-user', (req, res) => {
 
         return res.status(200).json({ message: 'User successfully added' });
       });
-
-      
-      
 
     });
   });
@@ -199,7 +206,7 @@ app.post('/login', (req, res) => {
 
   // Step 1: Check authentication
   const authQuery = 'SELECT * FROM authentication WHERE email = ? AND password = ?';
-  db.query(authQuery, [email, password], (err, authResults) => {
+  authdb.query(authQuery, [email, password], (err, authResults) => {
     if (err) {
       console.error('Auth error:', err);
       return res.status(500).json({ message: 'Server error during login.' });
@@ -232,6 +239,19 @@ app.post('/login', (req, res) => {
         }
 
         if (studentResults.length > 0) {
+          //create session token
+          let sess_token = Math.random(1000000,999999);
+          //create session
+          db.query('INSERT INTO sessions (email, sess_token, permissions) VALUES (?,?,?);', [email, sess_token, 0], (err, authResult) => {
+            if (err) {
+            console.error('Session error:', err);
+          } else {
+            console.log('Session created:', authResult);
+          }
+          });
+
+          res.cookie("session", sess_token);
+
           return res.json({
             message: 'Login successful as student',
             redirectTo: 'student.html',
@@ -249,6 +269,20 @@ app.post('/login', (req, res) => {
           }
 
           if (profResults.length > 0) {
+            //create session token
+          let sess_token = Math.random(1000000,999999);
+          //create session
+          db.query('INSERT INTO sessions (email, sess_token, permissions) VALUES (?,?,?);', [email, sess_token, 1], (err, authResult) => {
+            if (err) {
+            console.error('Session error:', err);
+          } else {
+            console.log('Session created:', authResult);
+          }
+          });
+
+          res.cookie("session", sess_token);
+
+
             return res.json({
               message: 'Login successful as faculty',
               redirectTo: 'faculty.html',

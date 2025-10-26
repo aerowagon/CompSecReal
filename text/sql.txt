@@ -1,7 +1,8 @@
 CREATE TABLE sessions (
 	id INT auto_increment PRIMARY KEY,
 	email varchar(255) NOT NULL,
-	sess_token int NOT NULL
+	sess_token int NOT NULL,
+	permissions boolean NOT NULL
 );
 
 CREATE TABLE users(
@@ -10,30 +11,31 @@ CREATE TABLE users(
 );
 
 CREATE TABLE students (
-	sys_ID int,
+	sys_ID int AUTO_INCREMENT,
 	blugold_ID int NOT NULL,
 	email varchar(255) NOT NULL,
 	f_name varchar(255) NOT NULL,
 	l_name varchar(255) NOT NULL,
-	GPA FLOAT(3,2),
+	GPA FLOAT(3,2) NOT NULL,
 	CONSTRAINT chk_gpa_range CHECK (GPA >=0.00 AND GPA <= 5.00),
-	address varchar(255),
-	city varchar(100),
-	add_city varchar(100),
-	zip_code int,
+	address varchar(255) NOT NULL,
+	city varchar(100) NOT NULL,
+	add_city varchar(100) NOT NULL,
+	zip_code int NOT NULL,
 	PRIMARY KEY (email),
 	FOREIGN KEY(sys_ID) REFERENCES users(sys_ID)
 );
 
 CREATE TABLE professors (
-	sys_ID int,
+	sys_ID int AUTO_INCREMENT,
 	email varchar(255) NOT NULL,
 	f_name varchar(255) NOT NULL,
 	l_name varchar(255) NOT NULL,
-	address varchar(255),
-	city varchar(100),
-	add_city varchar(100),
-	zip_code int,
+	GPA double NOT NULL,
+	address varchar(255) NOT NULL,
+	city varchar(100) NOT NULL,
+	add_city varchar(100) NOT NULL,
+	zip_code int NOT NULL,
 	PRIMARY KEY(email),
 	FOREIGN KEY(sys_ID) REFERENCES users(sys_ID)
 );
@@ -41,7 +43,7 @@ CREATE TABLE professors (
 CREATE TABLE bank (
 	sys_ID int NOT NULL,
 	credit FLOAT(5,2) NOT NULL DEFAULT 0.00,
-	PRIMARY KEY (sys_ID) REFERENCES users(sys_ID)
+	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
 );
 
 -- second server
