@@ -3,7 +3,7 @@ const mysql = require('mysql');
 const path = require('path');
 const app = express();
 const cookieParser = require('cookie-parser');
-const port = 8008;
+const port = 3000;
 
 // Parse form and JSON
 app.use(express.json());
@@ -19,14 +19,14 @@ app.use(cookieParser());
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '',       // If you set a password during install, use it here
+  password: '',        // your root password if needed
   database: 'compsec_project'
 });
 
 const authdb = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: '',       // If you set a password during install, use it here
+  password: '',        // same here
   database: 'compsec_project_auth'
 });
 
@@ -49,7 +49,7 @@ app.post('/add-user', (req, res) => {
     password,
     f_name,
     l_name,
-    blugold_ID,
+   /* blugold_ID,*/
     address,
     city,
     add_city,
@@ -86,7 +86,7 @@ app.post('/add-user', (req, res) => {
       const commonParams = [sys_ID, email, f_name, l_name, 0, address || '', city || '', add_city || '', zip_code || null];
 
       if (role === 'student') {
-        roleQuery = 'INSERT INTO students (sys_ID, blugold_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        roleQuery = 'INSERT INTO students (sys_ID, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
         commonParams.splice(1, 0, blugold_ID); // insert blugold_ID after sys_ID
       } else if (role === 'faculty') {
         roleQuery = 'INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
@@ -364,21 +364,4 @@ app.get('/student-by-sysid/:sys_ID', (req, res) => {
 
 
 
- /** 
-  * MySQLRoot Password: 1qaz
-  * user name = user
-  * password =       (it is blank)
-  * 
-  * port = 3000;
-  * http://localhost:3000/login.html
-  * http://localhost:3000/admin.html
-  * 
-  * /// mySQL  /////
-  * cd  C:\Program Files\MySQL\MySQL Server 8.0\bin
-  * mysql -u user -p
-  * 
-  * /// Node.js  ///////
-  * cd C:\Users\Hagard\Documents\GitHub\CompSecReal
-  * node server.js
-  * 
-  * */   
+  

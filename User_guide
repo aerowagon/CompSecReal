@@ -1,0 +1,26 @@
+install node.js
+install mySQL server
+
+
+/// start mySQL  /////
+use terminal or command window to open mySQL
+    Probably here -->  cd  C:\Program Files\MySQL\MySQL Server 8.0\bin
+        if first time set up user name and password
+        * user name = root
+        * password =       (it is blank)
+
+   run program with command: mysql -u root -p
+
+    run code loacated in text/sql.txt
+    (might need to run chunck by chunck)
+
+
+/// start Node.js  ///////
+open different terminal or command window 
+Probably here --> cd C:\Users\{ your user name goes here }\Documents\GitHub\CompSecReal
+  run program with command: node server.js
+
+
+/// go to website  ///////
+open browser and go to website
+because it is at port = 3000 go here --> http://localhost:3000/login.html

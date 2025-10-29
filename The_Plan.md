@@ -43,6 +43,12 @@ oct 20th push james
 - updated server.js faculty, and editStudent to make perniment updates in database gpa and credit, show faculty user name
 
 
+oct 29th push james
+- named database(s) in sql.txt to match server.js
+- added auto_incriment to blugold_id
+- noted out blugold_id from server.js, anmin.html
+- returned port to use to 3000
+- started user guide.
 
 
 
