@@ -27,7 +27,7 @@ const authdb = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',        // same here
-  database: 'compsec_project_auth'  /*database 2*/
+  database: 'compsec_project_auth'  /*Database 2*/
 });
 
 db.connect((err) => {

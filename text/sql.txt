@@ -57,6 +57,8 @@ CREATE TABLE authentication (
 	password varchar(255) NOT NULL
 );
 
+
+
 -- Insert data for compsec_project
 
 USE compsec_project;
