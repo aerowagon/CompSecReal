@@ -20,14 +20,14 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',        // your root password if needed
-  database: 'compsec_project'
+  database: 'compsec_project' /*Database 1*/
 });
 
 const authdb = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',        // same here
-  database: 'compsec_project_auth'
+  database: 'compsec_project_auth'  /*database 2*/
 });
 
 db.connect((err) => {

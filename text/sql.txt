@@ -56,3 +56,64 @@ CREATE TABLE authentication (
 	email varchar(225) NOT NULL,
 	password varchar(255) NOT NULL
 );
+
+-- Insert data for compsec_project
+
+USE compsec_project;
+
+INSERT INTO users (email) VALUES
+('faculty1@uwec.edu'),
+('fakestudent1@uwec.edu'),
+('fakestudent2@uwec.edu'),
+('fakestudent3@uwec.edu'),
+('fakestudent4@uwec.edu'),
+('fakestudent5@uwec.edu'),
+('fakestudent6@uwec.edu'),
+('fakestudent7@uwec.edu'),
+('fakestudent8@uwec.edu'),
+('fakestudent9@uwec.edu'),
+('fakestudent10@uwec.edu');
+
+INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
+VALUES
+(1, 'faculty1@uwec.edu', 'Alice', 'Anderson', 4.00, '101 Faculty Ln', 'Eau Claire', 'WI', 54701);
+
+INSERT INTO students (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
+VALUES
+(2, 'fakestudent1@uwec.edu', 'John', 'Doe', 3.50, '101 Student St', 'Eau Claire', 'WI', 54701),
+(3, 'fakestudent2@uwec.edu', 'Jane', 'Smith', 3.20, '102 Student St', 'Eau Claire', 'WI', 54701),
+(4, 'fakestudent3@uwec.edu', 'Robert', 'Brown', 3.75, '103 Student St', 'Eau Claire', 'WI', 54701),
+(5, 'fakestudent4@uwec.edu', 'Emily', 'Johnson', 3.90, '104 Student St', 'Eau Claire', 'WI', 54701),
+(6, 'fakestudent5@uwec.edu', 'Michael', 'Lee', 2.80, '105 Student St', 'Eau Claire', 'WI', 54701),
+(7, 'fakestudent6@uwec.edu', 'Sarah', 'Wilson', 4.00, '106 Student St', 'Eau Claire', 'WI', 54701),
+(8, 'fakestudent7@uwec.edu', 'David', 'Davis', 3.10, '107 Student St', 'Eau Claire', 'WI', 54701),
+(9, 'fakestudent8@uwec.edu', 'Laura', 'Martinez', 3.60, '108 Student St', 'Eau Claire', 'WI', 54701),
+(10, 'fakestudent9@uwec.edu', 'Kevin', 'Taylor', 2.95, '109 Student St', 'Eau Claire', 'WI', 54701),
+(11, 'fakestudent10@uwec.edu', 'Rachel', 'Anderson', 3.85, '110 Student St', 'Eau Claire', 'WI', 54701);
+
+INSERT INTO bank (sys_ID, credit) VALUES
+(1, 500.00),
+(2, 50.00),
+(3, 60.00),
+(4, 70.00),
+(5, 80.00),
+(6, 90.00),
+(7, 100.00),
+(8, 110.00),
+(9, 120.00),
+(10, 130.00),
+(11, 140.00);
+
+INSERT INTO sessions (email, sess_token, permissions)
+VALUES
+('faculty1@uwec.edu', 111111, TRUE),
+('fakestudent1@uwec.edu', 222222, FALSE);
+
+
+-- Insert information for compsec_project_auth
+USE compsec_project_auth;
+
+INSERT INTO authentication (email, password)
+VALUES
+('faculty1@uwec.edu', 'faculty'),
+('fakestudent1@uwec.edu', 'student');
