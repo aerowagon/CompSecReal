@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <title>Student Page</title>
@@ -6,149 +6,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./styles/global.css">
     <link rel="stylesheet" href="./styles/dashboard.css">
-    <!--<script src="./scripts/login.js" type="module"></script>--> 
 </head>
 <body>
     <header>
-       <!--THis is from the old project, I dont think we need a home <a href="./index.html">Go Home</a>-->
-       <div class="logo-container"><img src="./images/white_uwec_logo.png" alt="uwec logo"></div>
-       <!--Quick temp links, will be deleted-->
-       <div class="temp">
-            <a href="login.html">Log in screen</a>
-            <a href="student.html">Student view</a>
-            <a href="faculty.html" >Faculty view</a>
-            <a href="editStudent.html">EDIT Student view</a>
-            <a href="admin.html">Admin</a>
+        <div class="logo-container">
+            <img src="./images/white_uwec_logo.png" alt="uwec logo">
+        </div>
+      <!--Quick temp links, will be deleted-->
+      <!--
+      <div class="temp">
+        <a href="login.html">Log in screen</a>
+        <a href="student.html">Student view</a>
+        <a href="faculty.html" >Faculty view</a>
+        <a href="editStudent.html">EDIT Student view</a>
+        <a href="admin.html">Admin</a>
        </div>
+       -->
     </header>
-    
+
     <div class="custom-shape-divider-top-1760377864">
         <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
         </svg>
     </div>
 
-        <!--Everything needed on student page:
-        Personal info:
-
-        Student name (cant edit)
-        Student's bluegold id (cant edit)
-        Phone (student can edit)
-        Email (student can edit)
-        Address (student can edit)
-
-        Academic info:
-        Gpa (cant edit)
-        total credits (cant edit)
-        account balance (cant edit)
-
-        account info:
-        username and password???? 
-        -->
-       
     <section id="dashboard_container">
-    <h1>Hello Blugold!</h1>
+        <h1>Hello Blugold Student!</h1>
 
-    <div class="dashboard-split">
-        <!-- Personal Info -->
-        <div class="info-card">
-        <h3>Personal Information</h3>
+        <div class="dashboard-split">
+            <!-- Personal Info -->
+            <div class="info-card">
+                <h3>Personal Information</h3>
+                <p><strong>Name:</strong> <span id="studentName"></span></p>
+                <p><strong>Blugold ID:</strong> <span id="blugoldID"></span></p>
 
-        <p><strong>Name:</strong> <span id="studentName"></span></p>
-        <p><strong>Blugold ID:</strong> <span id="studentBlugoldID"></span></p>
-        <hr>
+                <label><strong>Phone:</strong>
+                    <input type="text" id="studentPhone" disabled>
+                </label>
 
-        <label>
-            <strong>Phone:</strong>
-            <input type="text" id="studentPhone" disabled>
-        </label>
+                <label><strong>Email:</strong>
+                    <input type="email" id="studentEmail" disabled>
+                </label>
 
-        <label>
-            <strong>Email:</strong>
-            <input type="email" id="studentEmail" disabled>
-            <input type="text" id="studentAddress" disabled>
-        </label>
+                <label><strong>Street:</strong>
+                    <input type="text" id="studentStreet" disabled>
+                </label>
 
-        <label>
-            <strong>Address:</strong>
-            <input type="email" id="studentEmail" disabled>
-            <input type="text" id="studentAddress" disabled>
-        </label>
+                <label><strong>City:</strong>
+                    <input type="text" id="studentCity" disabled>
+                </label>
 
-        <button type="button" class="edit-btn">Edit</button>
+                <label><strong>State:</strong>
+                    <input type="text" id="studentState" disabled>
+                </label>
+
+                <label><strong>ZIP:</strong>
+                    <input type="text" id="studentZip" disabled>
+                </label>
+
+                <button type="button" class="edit-student-btn">Edit</button>
+            </div>
+
+            <!-- Academic Info -->
+            <div class="info-card">
+                <h3>Academic Information</h3>
+                <p><strong>GPA:</strong> <span id="studentGPA"></span></p>
+                <p><strong>Account Balance:</strong> $<span id="studentBalance"></span></p>
+
+                <h3>Account</h3>
+                <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
+                <p><strong>Password:</strong> •••••••••</p>
+                <button type="button" id="logoutBtn" onclick="window.location.href='login.html'">Log Out</button>
+            </div>
         </div>
-
-        <!-- Academic Info -->
-        <div class="info-card">
-        <h3>Academic Information</h3>
-        <p><strong>GPA:</strong> <span id="studentGPA"></span></p>
-        <p><strong>Total Credits:</strong> <span id="studentCredits"></span></p>
-        <p><strong>Account Balance:</strong> $<span id="studentBalance"></span></p>
-
-        <hr>
-
-        <h3>Account</h3>
-        <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
-        <p><strong>Password:</strong> •••••••••</p>
-
-        <br>
-
-        <button type="button" id="logoutBtn" onclick="localStorage.clear(); window.location.href='login.html'">Log Out</button>
-
-        </div>
-    </div>
-
     </section>
 
     <script>
-        async function loadStudentInfo() {
-            const sys_ID = localStorage.getItem('user_sys_ID');
-            if (!sys_ID) {
-                console.warn('No sys_ID found in localStorage');
-                return;
-            }
-
-            try {
-                // Step 1: Get student record using sys_ID
-                const res = await fetch(`/student-by-sysid/${sys_ID}`);
-                if (!res.ok) {
-                    throw new Error('Failed to fetch student info');
-                }
-
-                const student = await res.json();
-
-                // Log student data to debug
-                console.log(student); // Debug log to check the values
-
-                // Step 2: Populate fields
-                document.getElementById('studentName').textContent = `${student.f_name} ${student.l_name}`;
-                document.getElementById('studentBlugoldID').textContent = student.blugold_ID || 'N/A';
-                document.getElementById('studentPhone').value = '(Not stored)';
-                document.getElementById('studentEmail').value = student.email || '';
-                
-                // Concatenate address and handle empty values
-                document.getElementById('studentAddress').value = [
-                    student.address || '',
-                    student.city || '',
-                    student.add_city || '',
-                    student.zip_code || ''
-                ].filter(Boolean).join(' ');
-
-                document.getElementById('studentGPA').textContent = student.GPA || '0.00';
-                document.getElementById('studentCredits').textContent = student.credit || '0';
-                document.getElementById('studentBalance').textContent = student.credit || '0.00';
-                document.getElementById('usernameDisplay').textContent = student.email || '';
-
-            } catch (err) {
-                console.error(err);
-            }
+    async function loadStudentInfo() {
+        const sys_ID = localStorage.getItem('user_sys_ID');
+        if (!sys_ID) {
+            console.error('No sys_ID found in localStorage');
+            return;
         }
 
+        try {
+            const res = await fetch(`/student-by-sysid/${sys_ID}`);
+            const student = await res.json();
 
-        // Run on load
+            document.getElementById('studentName').textContent = `${student.f_name} ${student.l_name}`;
+            document.getElementById('blugoldID').textContent = student.blugold_ID;
+            document.getElementById('studentPhone').value = student.phone || '';
+            document.getElementById('studentEmail').value = student.email || '';
+            document.getElementById('studentStreet').value = student.address || '';
+            document.getElementById('studentCity').value = student.city || '';
+            document.getElementById('studentState').value = student.add_city || '';
+            document.getElementById('studentZip').value = student.zip_code || '';
+            document.getElementById('studentGPA').textContent = student.GPA || '0.00';
+            document.getElementById('studentBalance').textContent = student.credit?.toFixed(2) || '0.00';
+            document.getElementById('usernameDisplay').textContent = `${student.f_name} ${student.l_name}`;
+        } catch (err) {
+            console.error('Failed to load student info:', err);
+        }
+    }
+
+    async function toggleEdit(button) {
+        const isEditing = button.textContent === 'Edit';
+        ['studentPhone', 'studentStreet', 'studentCity', 'studentState', 'studentZip']
+            .forEach(id => document.getElementById(id).disabled = !isEditing);
+
+            document.getElementById('studentEmail').disabled = true;
+
+        button.textContent = isEditing ? 'Save' : 'Edit';
+
+        // If saving
+        if (!isEditing) {
+            const sys_ID = localStorage.getItem('user_sys_ID');
+            const updatedInfo = {
+                email: document.getElementById('studentEmail').value.trim() || null,
+                address: document.getElementById('studentStreet').value.trim() || null,
+                city: document.getElementById('studentCity').value.trim() || null,
+                add_city: document.getElementById('studentState').value.trim() || null,
+                zip_code: parseInt(document.getElementById('studentZip').value) || null,
+                phone: document.getElementById('studentPhone').value.trim() || null
+            };
+
+            try {
+                const res = await fetch(`/update-student-info/${sys_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedInfo)
+                });
+                const data = await res.json();
+                alert(data.message || 'Saved successfully!');
+            } catch (err) {
+                console.error('Failed to update student info:', err);
+                alert('Failed to save. Please try again.');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const editBtn = document.querySelector('.edit-student-btn');
+        if (editBtn) editBtn.addEventListener('click', () => toggleEdit(editBtn));
         loadStudentInfo();
-        </script>
-
-
+    });
+    </script>
 </body>
 </html>

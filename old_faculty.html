@@ -1,0 +1,305 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <title>Faculty Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles/global.css">
+    <link rel="stylesheet" href="./styles/dashboard.css">
+    <!--<script src="./scripts/login.js" type="module"></script>--> 
+</head>
+<body>
+    <header>
+       <div class="logo-container"><img src="./images/white_uwec_logo.png" alt="uwec logo"></div>
+       <!--Quick temp links, will be deleted-->
+       <div class="temp">
+            <a href="login.html">Log in screen</a>
+            <a href="student.html">Student view</a>
+            <a href="faculty.html" >Faculty view</a>
+            <a href="editStudent.html">EDIT Student view</a>
+            <a href="admin.html">Admin</a>
+       </div>
+    </header>
+    
+    <div class="custom-shape-divider-top-1760377864">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+        <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+        </svg>
+    </div>
+    
+        <!--Everything needed on faculty page:
+        Faculty personal information:
+        Name, Id, contact info (can edit): phone, email, address
+
+        Faculty job:
+
+        Has a list of students? (the assignment says that we need to allow faculty
+        to enter update and retrieve a student’s information):
+
+        - can select student and see their :
+
+        Student's bluegold id (cant edit)
+        Phone (cant edit)
+        Email (cant edit)
+        Address (cant edit)
+        Student name (cant edit)
+
+        Academic info:
+        Gpa (can edit)
+        total credits (can edit)
+        check student's balance
+        add charges/fees/tuition? 
+
+        Create student:
+        - allows faculty to create a student, however besides the name, the student should fill in personal info, bluegold id
+        should be generated randomly (right?), and maybe right away they can add the gpa, credits, balance, and add any fees/charges
+        to their account 
+        -->
+    <section id="dashboard_container">
+        <h1>Hello Blugold Faculty!</h1>
+
+        <div class="dashboard-split">
+            <!-- Personal Info -->
+            <div class="info-card">
+                <h3>Personal Information</h3>
+                <p><strong>Name:</strong> <span id="facultyName"></span></p>
+                <p><strong>Faculty ID:</strong> <span id="facultyID"></span></p>
+
+                <label>
+                <strong>Phone:</strong>
+                <input type="text" id="facultyPhone" disabled>
+                </label>
+
+                <label>
+                <strong>Email:</strong>
+                <input type="email" id="facultyEmail" disabled>
+                </label>
+
+                <label>
+                <strong>Address:</strong>
+                <input type="text" id="facultyAddress" disabled>
+                </label>
+
+                <button type="button" class="edit-faculty-btn">Edit</button>
+
+
+
+
+ <!-- old faculty info
+            <h3>Personal Information</h3>
+
+            <p><strong>Name:</strong> Fake Blugold</p>
+            <p><strong>Faculty ID:</strong> 1234567</p>
+        
+
+            <label>
+                <strong>Phone:</strong>
+                <input type="text" value="(111) 111-1111" disabled>
+            </label>
+
+            <label>
+                <strong>Email:</strong>
+                <input type="email" value="fakeblugold@uwec.edu" disabled>
+            </label>
+
+            <label>
+                <strong>Address:</strong>
+                <input type="text" value="123 College Ave, Eau Claire, WI" disabled>
+            </label>
+
+            <button type="button" class="edit-btn">Edit</button>
+
+ old faculty info       -->            
+
+            <!--Account info-->
+            <br>
+            <h3>Account</h3>
+            <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
+            <p><strong>Password:</strong> •••••••••</p>
+            <br>
+            <button type="button" id="logoutBtn" onclick="window.location.href='login.html' ">Log Out</button>
+            
+            </div>
+            
+
+            <!--Faculty student controls/views????-->
+            <!--Creating a student-->
+            <div class="info-card">
+                <h3>Student Account Creation</h3>
+                <button type="button" id="Create Student" onclick="window.open('admin.html', '_blank');">Create Student</button>
+
+                <!--Viewing enrolled students-->
+                <!--I'm adding this assuming a list is how we are integrating the faculty viewing students-->
+                
+                <h3>Enrolled Students</h3>
+                <p>Select a student to view or edit details.</p>
+                <!--New student list that pulls from database -->
+                <div class="student-list" id="studentList"></div>
+
+ <!-- removed old student list               
+                <div class="student-list">
+                    <div class="student-item">
+                        <p>Fake student 1</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 2</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 2</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 4</p>
+                    <button class="view-btn">View</button>
+                    </div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 5</p>
+                    <button class="view-btn">View</button></div>
+
+                    <div class="student-item">
+                        <p>Fake student 6</p>
+                    <button class="view-btn">View</button></div>
+                    
+                    <div class="student-item">
+                        <p>Fake student 7</p>
+                    <button class="view-btn">View</button></div>
+
+                    <div class="student-item">
+                        <p>Fake student 8</p>
+                    <button class="view-btn">View</button></div>
+                    
+
+
+                    </div>
+                </div>
+-->
+
+        </div>
+    </section>
+
+<script>
+    // Fetch students from backend and display them
+    async function loadStudents() {
+        try {
+            const res = await fetch('/get-students');
+            const students = await res.json();
+
+            const studentList = document.getElementById('studentList');
+            studentList.innerHTML = ''; // clear any existing content
+
+            students.forEach(student => {
+                const studentItem = document.createElement('div');
+                studentItem.className = 'student-item';
+
+                studentItem.innerHTML = `
+                    <p>${student.f_name} ${student.l_name}</p>
+                    <button class="view-btn" data-id="${student.blugold_ID}">View</button>
+                `;
+
+                studentItem.querySelector('.view-btn').addEventListener('click', () => {
+                    window.open(`editStudent.html?blugold_ID=${student.blugold_ID}`, '_blank');
+                });
+
+                studentList.appendChild(studentItem);
+            });
+
+        } catch (err) {
+            console.error('Failed to load students:', err);
+        }
+    }
+
+    // Load faculty information
+    async function loadFacultyInfo() {
+        const sys_ID = localStorage.getItem('user_sys_ID');
+        if (!sys_ID) {
+            console.warn('No sys_ID found in localStorage');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/faculty-info/${sys_ID}`);
+            const faculty = await res.json();
+
+            document.getElementById('facultyName').textContent = `${faculty.f_name} ${faculty.l_name}`;
+            document.getElementById('facultyID').textContent = sys_ID;
+            document.getElementById('facultyEmail').value = faculty.email || '';
+            document.getElementById('facultyAddress').value = `${faculty.address || ''} ${faculty.city || ''} ${faculty.add_city || ''} ${faculty.zip_code || ''}`.trim();
+            document.getElementById('facultyPhone').value = faculty.phone || '(Not stored yet)';
+            document.getElementById('usernameDisplay').textContent = `${faculty.f_name} ${faculty.l_name}`;
+        } catch (err) {
+            console.error('Failed to load faculty info:', err);
+        }
+    }
+
+    // Toggle between edit and save mode
+    async function toggleEdit(button, fieldIds) {
+        const isEditing = button.textContent === 'Edit';
+        fieldIds.forEach(id => {
+            document.getElementById(id).disabled = !isEditing;
+        });
+        button.textContent = isEditing ? 'Save' : 'Edit';
+
+        if (!isEditing) {
+            const sys_ID = localStorage.getItem('user_sys_ID');
+            const fullAddress = document.getElementById('facultyAddress').value.trim();
+            const addressParts = fullAddress.split(' ');
+
+            let zip_code = addressParts.pop();
+            let add_city = addressParts.pop();
+            let city = addressParts.pop();
+            let address = addressParts.join(' ');
+
+            // Validate parts or set them to null
+            zip_code = parseInt(zip_code) || null;
+            city = city || null;
+            add_city = add_city || null;
+            address = address || null;
+
+            const updatedInfo = {
+                email: document.getElementById('facultyEmail').value.trim() || null,
+                address,
+                city,
+                add_city,
+                zip_code,
+                phone: document.getElementById('facultyPhone').value.trim() || null
+            };
+
+            try {
+                const res = await fetch(`/update-faculty/${sys_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedInfo)
+                });
+
+                const data = await res.json();
+                alert(data.message || 'Saved successfully!');
+            } catch (err) {
+                console.error('Error updating info:', err);
+                alert('Failed to save. Please try again.');
+            }
+        }
+    }
+
+    // Initialize page data and set up listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        const editButton = document.querySelector('.edit-faculty-btn');
+        if (editButton) {
+            editButton.addEventListener('click', (e) => {
+                toggleEdit(e.target, ['facultyPhone', 'facultyEmail', 'facultyAddress']);
+            });
+        }
+
+        loadFacultyInfo();
+        loadStudents();
+    });
+</script>
+
+
+</body>
+</html>
