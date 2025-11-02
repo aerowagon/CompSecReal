@@ -1,67 +1,70 @@
--- first database
-CREATE DATABASE compsec_project
 
-CREATE TABLE sessions (
-	id INT auto_increment PRIMARY KEY,
-	email varchar(255) NOT NULL,
-	sess_token int NOT NULL,
-	permissions boolean NOT NULL
-);
+
+-- first database
+
+CREATE DATABASE compsec_project;
+USE compsec_project;
 
 CREATE TABLE users(
-    sys_ID int PRIMARY KEY AUTO_INCREMENT NOT NULL,
-    email varchar(255) NOT NULL
+    sys_ID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    email VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE sessions (
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	email VARCHAR(255) NOT NULL,
+	sess_token INT NOT NULL,
+	permissions BOOLEAN NOT NULL
 );
 
 CREATE TABLE students (
-	sys_ID int,
-	blugold_ID int AUTO_INCREMENT PRIMARY KEY,
-	email varchar(255) NOT NULL,
-	f_name varchar(255) NOT NULL,
-	l_name varchar(255) NOT NULL,
+	sys_ID INT,
+	blugold_ID INT AUTO_INCREMENT PRIMARY KEY,
+	email VARCHAR(255) NOT NULL,
+	f_name VARCHAR(255) NOT NULL,
+	l_name VARCHAR(255) NOT NULL,
 	GPA FLOAT(3,2) NOT NULL DEFAULT 0.00,
-	CONSTRAINT chk_gpa_range CHECK (GPA >=0.00 AND GPA <= 5.00),
-	address varchar(255) NOT NULL,
-	city varchar(100) NOT NULL,
-	add_city varchar(100) NOT NULL,
-	zip_code int NOT NULL,
-	FOREIGN KEY(sys_ID) REFERENCES users(sys_ID)
+	CONSTRAINT chk_gpa_range CHECK (GPA >= 0.00 AND GPA <= 5.00),
+	address VARCHAR(255) NOT NULL,
+	city VARCHAR(100) NOT NULL,
+	add_city VARCHAR(100) NOT NULL,
+	zip_code INT NOT NULL,
+	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
 );
 
 CREATE TABLE professors (
-	sys_ID int,
-	email varchar(255) NOT NULL UNIQUE,
-	f_name varchar(255) NOT NULL,
-	l_name varchar(255) NOT NULL,
-	GPA double NOT NULL,
-	address varchar(255) NOT NULL,
-	city varchar(100) NOT NULL,
-	add_city varchar(100) NOT NULL,
-	zip_code int NOT NULL,
-	PRIMARY KEY(email),
-	FOREIGN KEY(sys_ID) REFERENCES users(sys_ID)
+	sys_ID INT,
+	email VARCHAR(255) NOT NULL UNIQUE,
+	f_name VARCHAR(255) NOT NULL,
+	l_name VARCHAR(255) NOT NULL,
+	GPA DOUBLE NOT NULL,
+	address VARCHAR(255) NOT NULL,
+	city VARCHAR(100) NOT NULL,
+	add_city VARCHAR(100) NOT NULL,
+	zip_code INT NOT NULL,
+	PRIMARY KEY (email),
+	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
 );
 
-
-
 CREATE TABLE bank (
-	sys_ID int NOT NULL,
+	sys_ID INT NOT NULL,
 	credit FLOAT(5,2) NOT NULL DEFAULT 0.00,
 	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
 );
 
--- second server
+
+-- second database
 CREATE DATABASE compsec_project_auth;
+USE compsec_project_auth;
 
 CREATE TABLE authentication (
 	id INT AUTO_INCREMENT PRIMARY KEY,
-	email varchar(225) NOT NULL,
-	password varchar(255) NOT NULL
+	email VARCHAR(225) NOT NULL,
+	password VARCHAR(255) NOT NULL
 );
 
 
-
--- Important data to paste into SQL for computer securtiy project
+-- switch back to main project database
 
 USE compsec_project;
 
@@ -70,7 +73,6 @@ ADD phone VARCHAR(15) NULL;
 
 ALTER TABLE students
 ADD phone VARCHAR(15) NULL;
-
 
 ALTER TABLE students
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -86,6 +88,9 @@ ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIME
 
 ALTER TABLE users
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+
+-- Insert Initial Data
 
 
 INSERT INTO users (email) VALUES
@@ -137,7 +142,8 @@ VALUES
 ('fakestudent1@uwec.edu', 222222, FALSE);
 
 
--- Insert information for compsec_project_auth
+-- Insert authentication info
+
 USE compsec_project_auth;
 
 INSERT INTO authentication (email, password)
