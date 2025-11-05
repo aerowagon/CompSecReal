@@ -67,8 +67,12 @@
       <input type="number" step="0.01" id="GPA">
     </label><br>
 
-    <label style="font-family: Arial, Helvetica, sans-serif;display: block; margin: 0.5rem 0; color: #2b3594; font-size: 1rem; font-weight: bold;">Total Credits:
-      <input type="number" step="0.01" id="credit">
+    <label style="font-family: Arial, Helvetica, sans-serif;display: block; margin: 0.5rem 0; color: #2b3594; font-size: 1rem; font-weight: bold;">Total Class Credits:
+      <input type="number" id="total_credits" min="0">
+    </label><br>
+
+    <label style="font-family: Arial, Helvetica, sans-serif;display: block; margin: 0.5rem 0; color: #2b3594; font-size: 1rem; font-weight: bold;">Total account_balance:
+      <input type="number" step="0.01" id="account_balance">
     </label><br>
 
     <button type="submit">Save Changes</button>
@@ -87,18 +91,20 @@
       document.getElementById('blugold_ID').textContent = student.blugold_ID;
       document.getElementById('address').textContent = student.address;
       document.getElementById('GPA').value = student.GPA ?? '';
-      document.getElementById('credit').value = student.credit ?? '';
+      document.getElementById('account_balance').value = student.account_balance ?? '';
+      document.getElementById('total_credits').value = student.total_credits ?? 0;
     }
 
     document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const GPA = document.getElementById('GPA').value;
-      const credit = document.getElementById('credit').value;
+      const account_balance = document.getElementById('account_balance').value;
+      const total_credits = document.getElementById('total_credits').value;
 
       const res = await fetch(`/update-student/${blugold_ID}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ GPA, credit }),
+        body: JSON.stringify({ GPA, account_balance, total_credits }),
       });
 
       if (res.ok) {

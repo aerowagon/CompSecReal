@@ -39,11 +39,11 @@
                 <h3>Personal Information</h3>
                 <p><strong>Name:</strong> <span id="studentName"></span></p>
                 <p><strong>Blugold ID:</strong> <span id="blugoldID"></span></p>
-
-                <label><strong>Phone:</strong>
+<!--
+               <label><strong>Phone:</strong>
                     <input type="text" id="studentPhone" disabled>
                 </label>
-
+-->
                 <label><strong>Email:</strong>
                     <input type="email" id="studentEmail" disabled>
                 </label>
@@ -61,7 +61,7 @@
                 </label>
 
                 <label><strong>ZIP:</strong>
-                    <input type="text" id="studentZip" disabled>
+                    <input type="text" id="studentZip" name="zip_code" pattern="\d{5}" placeholder="12345" />
                 </label>
 
                 <button type="button" class="edit-student-btn">Edit</button>
@@ -71,6 +71,7 @@
             <div class="info-card">
                 <h3>Academic Information</h3>
                 <p><strong>GPA:</strong> <span id="studentGPA"></span></p>
+                <p><strong>Total Class Credits:</strong> <span id="studentCredits"></span></p>
                 <p><strong>Account Balance:</strong> $<span id="studentBalance"></span></p>
 
                 <h3>Account</h3>
@@ -95,14 +96,15 @@
 
             document.getElementById('studentName').textContent = `${student.f_name} ${student.l_name}`;
             document.getElementById('blugoldID').textContent = student.blugold_ID;
-            document.getElementById('studentPhone').value = student.phone || '';
+/*            document.getElementById('studentPhone').value = student.phone || '';  */
             document.getElementById('studentEmail').value = student.email || '';
             document.getElementById('studentStreet').value = student.address || '';
             document.getElementById('studentCity').value = student.city || '';
             document.getElementById('studentState').value = student.add_city || '';
             document.getElementById('studentZip').value = student.zip_code || '';
             document.getElementById('studentGPA').textContent = student.GPA || '0.00';
-            document.getElementById('studentBalance').textContent = student.credit?.toFixed(2) || '0.00';
+            document.getElementById('studentCredits').textContent = student.total_credits || '0';
+            document.getElementById('studentBalance').textContent = student.account_balance?.toFixed(2) || '0.00';
             document.getElementById('usernameDisplay').textContent = `${student.f_name} ${student.l_name}`;
         } catch (err) {
             console.error('Failed to load student info:', err);
@@ -111,7 +113,7 @@
 
     async function toggleEdit(button) {
         const isEditing = button.textContent === 'Edit';
-        ['studentPhone', 'studentStreet', 'studentCity', 'studentState', 'studentZip']
+        [ /*'studentPhone'*/, 'studentStreet', 'studentCity', 'studentState', 'studentZip']
             .forEach(id => document.getElementById(id).disabled = !isEditing);
 
             document.getElementById('studentEmail').disabled = true;
@@ -127,7 +129,7 @@
                 city: document.getElementById('studentCity').value.trim() || null,
                 add_city: document.getElementById('studentState').value.trim() || null,
                 zip_code: parseInt(document.getElementById('studentZip').value) || null,
-                phone: document.getElementById('studentPhone').value.trim() || null
+ /*               phone: document.getElementById('studentPhone').value.trim() || null */
             };
 
             try {

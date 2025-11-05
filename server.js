@@ -120,7 +120,10 @@ app.post('/add-user', (req, res) => {
 
         // If user is a student, also insert into bank table
        if (role === 'student') {
-        const insertBank = 'INSERT INTO bank (sys_ID, credit) VALUES (?, ?)';
+        console.log('Student role detected, inserting into bank. sys_ID:', sys_ID);
+
+
+        const insertBank = 'INSERT INTO bank (sys_ID, account_balance) VALUES (?, ?)';
         db.query(insertBank, [sys_ID, 0], (err, bankResult) => {
           if (err) {
             console.error('Insert bank error:', err);
@@ -195,7 +198,7 @@ app.get('/get-students', (req, res) => {
 app.get('/student/:blugold_ID', (req, res) => {
   const { blugold_ID } = req.params;
   const query = `
-    SELECT s.*, b.credit 
+    SELECT s.*, b.account_balance 
     FROM students s 
     LEFT JOIN bank b ON s.sys_ID = b.sys_ID 
     WHERE blugold_ID = ?
@@ -321,16 +324,16 @@ app.post('/login', (req, res) => {
 
 app.put('/update-faculty/:sys_ID', (req, res) => {
   const { sys_ID } = req.params;
-  const { email, address, city, add_city, zip_code, phone } = req.body;
+  const { email, address, city, add_city, zip_code, /*phone*/ } = req.body;
 
 const updateQuery = `
   UPDATE professors
-  SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?, phone = ?
+  SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?
   WHERE sys_ID = ?
 `;
 
 
-  db.query(updateQuery, [email, address, city, add_city, zip_code, phone, sys_ID], (err, result) => {
+  db.query(updateQuery, [email, address, city, add_city, zip_code, /*phone,*/ sys_ID], (err, result) => {
     if (err) {
       console.error('Failed to update faculty info:', err);
       return res.status(500).json({ message: 'Failed to update faculty info' });
@@ -349,11 +352,11 @@ app.put('/update-student-info/:sys_ID', (req, res) => {
 
   const updateQuery = `
     UPDATE students
-    SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?, phone = ?
+    SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?, 
     WHERE sys_ID = ?
   `;
 
-  db.query(updateQuery, [email, address, city, add_city, zip_code, phone, sys_ID], (err, result) => {
+  db.query(updateQuery, [email, address, city, add_city, zip_code,/* phone,*/ sys_ID], (err, result) => {
     if (err) {
       console.error('Failed to update student info:', err);
       return res.status(500).json({ message: 'Failed to update student info' });
@@ -371,27 +374,27 @@ app.put('/update-student-info/:sys_ID', (req, res) => {
 
 app.put('/update-student/:blugold_ID', (req, res) => {
   const { blugold_ID } = req.params;
-  const { GPA, credit } = req.body;
+  const { GPA, account_balance, total_credits } = req.body;
 
-  // Update GPA in students table
-  const updateStudent = 'UPDATE students SET GPA = ? WHERE blugold_ID = ?';
-  db.query(updateStudent, [GPA, blugold_ID], (err) => {
+  // Update GPA and total_credits in students table
+  const updateStudent = 'UPDATE students SET GPA = ?, total_credits = ? WHERE blugold_ID = ?';
+  db.query(updateStudent, [GPA, total_credits, blugold_ID], (err) => {
     if (err) {
-      console.error('Failed to update GPA:', err);
-      return res.status(500).json({ message: 'Failed to update GPA' });
+      console.error('Failed to update student info:', err);
+      return res.status(500).json({ message: 'Failed to update student info' });
     }
 
-    // Update credit in bank table
+    // Update account_balance in bank table
     const updateBank = `
       UPDATE bank 
       JOIN students ON bank.sys_ID = students.sys_ID 
-      SET credit = ? 
+      SET account_balance = ? 
       WHERE students.blugold_ID = ?
     `;
-    db.query(updateBank, [credit, blugold_ID], (err) => {
+    db.query(updateBank, [account_balance, blugold_ID], (err) => {
       if (err) {
-        console.error('Failed to update credits:', err);
-        return res.status(500).json({ message: 'Failed to update credits' });
+        console.error('Failed to update account_balance:', err);
+        return res.status(500).json({ message: 'Failed to update account_balance' });
       }
 
       res.json({ message: 'Student updated successfully' });
@@ -399,13 +402,14 @@ app.put('/update-student/:blugold_ID', (req, res) => {
   });
 });
 
+
 /////////////////// Student.html page  /////////////////
 
 
 app.get('/student-by-sysid/:sys_ID', (req, res) => {
   const { sys_ID } = req.params;
   const query = `
-    SELECT s.*, b.credit 
+    SELECT s.*, b.account_balance, s.total_credits
     FROM students s 
     LEFT JOIN bank b ON s.sys_ID = b.sys_ID 
     WHERE s.sys_ID = ?

@@ -36,11 +36,11 @@
             <h3>Personal Information</h3>
             <p><strong>Name:</strong> <span id="facultyName"></span></p>
             <p><strong>Faculty ID:</strong> <span id="facultyID"></span></p>
-
+<!--
             <label><strong>Phone:</strong>
                 <input type="text" id="facultyPhone" disabled>
             </label>
-
+-->
             <label><strong>Email:</strong>
                 <input type="email" id="facultyEmail" disabled>
             </label>
@@ -58,7 +58,7 @@
             </label>
 
             <label><strong>ZIP:</strong>
-                <input type="text" id="facultyZip" disabled>
+                <input type="text" id="facultyZip" name="zip_code" pattern="\d{5}" placeholder="12345" />
             </label>
 
             <button type="button" class="edit-faculty-btn">Edit</button>
@@ -98,7 +98,7 @@ async function loadFacultyInfo() {
 
         document.getElementById('facultyName').textContent = `${faculty.f_name} ${faculty.l_name}`;
         document.getElementById('facultyID').textContent = sys_ID;
-        document.getElementById('facultyPhone').value = faculty.phone || '';
+ /*       document.getElementById('facultyPhone').value = faculty.phone || ''; */
         document.getElementById('facultyEmail').value = faculty.email || '';
         document.getElementById('facultyStreet').value = faculty.address || '';
         document.getElementById('facultyCity').value = faculty.city || '';
@@ -136,7 +136,7 @@ async function loadStudents() {
 
 async function toggleEdit(button) {
     const isEditing = button.textContent === 'Edit';
-    ['facultyPhone','facultyEmail','facultyStreet','facultyCity','facultyState','facultyZip'].forEach(id => {
+    [/*'facultyPhone'*/,'facultyEmail','facultyStreet','facultyCity','facultyState','facultyZip'].forEach(id => {
         document.getElementById(id).disabled = !isEditing;
     });
     button.textContent = isEditing ? 'Save' : 'Edit';
@@ -148,8 +148,8 @@ async function toggleEdit(button) {
             address: document.getElementById('facultyStreet').value.trim() || null,
             city: document.getElementById('facultyCity').value.trim() || null,
             add_city: document.getElementById('facultyState').value.trim() || null,
-            zip_code: parseInt(document.getElementById('facultyZip').value) || null,
-            phone: document.getElementById('facultyPhone').value.trim() || null
+            zip_code: document.getElementById('facultyZip').value.trim() || null,
+            /*phone: document.getElementById('facultyPhone').value.trim() || null */
         };
 
         try {

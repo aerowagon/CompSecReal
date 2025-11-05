@@ -50,6 +50,15 @@ oct 29th push james
 - returned port to use to 3000
 - started user guide.
 
+nov 4th push james
+- in the table bank changed credit to account_balance
+- in the table students added total_credit
+- in the table students changed zip_code to char(5) and limit char input from 0 - 9 this allows leading zeros
+- updated server.js, admin.html, edistudent.html, faculty.html and student.html for changes.
+- removed or noted out "phone" was not in mySQL database and prevented edits. uptaded all js and html
+
+
+
 
 
 Promblems need to fix.

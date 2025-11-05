@@ -28,8 +28,11 @@ CREATE TABLE students (
 	address VARCHAR(255) NOT NULL,
 	city VARCHAR(100) NOT NULL,
 	add_city VARCHAR(100) NOT NULL,
-	zip_code INT NOT NULL,
+	zip_code CHAR(5) NOT NULL,
+	CONSTRAINT chk_students_zip_code CHECK (zip_code REGEXP '^[0-9]{5}$'),
+	total_credits INT DEFAULT 0,
 	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
+
 );
 
 CREATE TABLE professors (
@@ -41,14 +44,16 @@ CREATE TABLE professors (
 	address VARCHAR(255) NOT NULL,
 	city VARCHAR(100) NOT NULL,
 	add_city VARCHAR(100) NOT NULL,
-	zip_code INT NOT NULL,
+	zip_code CHAR(5) NOT NULL,
+	CONSTRAINT chk_professors_zip_code CHECK (zip_code REGEXP '^[0-9]{5}$'),
 	PRIMARY KEY (email),
 	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
+	
 );
 
 CREATE TABLE bank (
 	sys_ID INT NOT NULL,
-	credit FLOAT(5,2) NOT NULL DEFAULT 0.00,
+	account_balance FLOAT(5,2) NOT NULL DEFAULT 0.00,
 	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
 );
 
@@ -108,22 +113,22 @@ INSERT INTO users (email) VALUES
 
 INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
 VALUES
-(1, 'faculty1@uwec.edu', 'Alice', 'Anderson', 4.00, '101 Faculty Ln', 'Eau Claire', 'WI', 54701);
+(1, 'faculty1@uwec.edu', 'Alice', 'Anderson', 4.00, '101 Faculty Ln', 'Eau Claire', 'WI', '54701');
 
 INSERT INTO students (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
 VALUES
-(2, 'fakestudent1@uwec.edu', 'John', 'Doe', 3.50, '101 Student St', 'Eau Claire', 'WI', 54701),
-(3, 'fakestudent2@uwec.edu', 'Jane', 'Smith', 3.20, '102 Student St', 'Eau Claire', 'WI', 54701),
-(4, 'fakestudent3@uwec.edu', 'Robert', 'Brown', 3.75, '103 Student St', 'Eau Claire', 'WI', 54701),
-(5, 'fakestudent4@uwec.edu', 'Emily', 'Johnson', 3.90, '104 Student St', 'Eau Claire', 'WI', 54701),
-(6, 'fakestudent5@uwec.edu', 'Michael', 'Lee', 2.80, '105 Student St', 'Eau Claire', 'WI', 54701),
-(7, 'fakestudent6@uwec.edu', 'Sarah', 'Wilson', 4.00, '106 Student St', 'Eau Claire', 'WI', 54701),
-(8, 'fakestudent7@uwec.edu', 'David', 'Davis', 3.10, '107 Student St', 'Eau Claire', 'WI', 54701),
-(9, 'fakestudent8@uwec.edu', 'Laura', 'Martinez', 3.60, '108 Student St', 'Eau Claire', 'WI', 54701),
-(10, 'fakestudent9@uwec.edu', 'Kevin', 'Taylor', 2.95, '109 Student St', 'Eau Claire', 'WI', 54701),
-(11, 'fakestudent10@uwec.edu', 'Rachel', 'Anderson', 3.85, '110 Student St', 'Eau Claire', 'WI', 54701);
+(2, 'fakestudent1@uwec.edu', 'John', 'Doe', 3.50, '101 Student St', 'Eau Claire', 'WI', '54701'),
+(3, 'fakestudent2@uwec.edu', 'Jane', 'Smith', 3.20, '102 Student St', 'Eau Claire', 'WI', '54701'),
+(4, 'fakestudent3@uwec.edu', 'Robert', 'Brown', 3.75, '103 Student St', 'Eau Claire', 'WI', '54701'),
+(5, 'fakestudent4@uwec.edu', 'Emily', 'Johnson', 3.90, '104 Student St', 'Eau Claire', 'WI', '54701'),
+(6, 'fakestudent5@uwec.edu', 'Michael', 'Lee', 2.80, '105 Student St', 'Eau Claire', 'WI', '54701'),
+(7, 'fakestudent6@uwec.edu', 'Sarah', 'Wilson', 4.00, '106 Student St', 'Eau Claire', 'WI', '54701'),
+(8, 'fakestudent7@uwec.edu', 'David', 'Davis', 3.10, '107 Student St', 'Eau Claire', 'WI', '54701'),
+(9, 'fakestudent8@uwec.edu', 'Laura', 'Martinez', 3.60, '108 Student St', 'Eau Claire', 'WI', '54701'),
+(10, 'fakestudent9@uwec.edu', 'Kevin', 'Taylor', 2.95, '109 Student St', 'Eau Claire', 'WI', '54701'),
+(11, 'fakestudent10@uwec.edu', 'Rachel', 'Anderson', 3.85, '110 Student St', 'Eau Claire', 'WI', '54701');
 
-INSERT INTO bank (sys_ID, credit) VALUES
+INSERT INTO bank (sys_ID, account_balance) VALUES
 (1, 500.00),
 (2, 50.00),
 (3, 60.00),
