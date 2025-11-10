@@ -113,14 +113,13 @@
 
     async function toggleEdit(button) {
         const isEditing = button.textContent === 'Edit';
-        [ /*'studentPhone'*/, 'studentStreet', 'studentCity', 'studentState', 'studentZip']
+        ['studentStreet', 'studentCity', 'studentState', 'studentZip']
             .forEach(id => document.getElementById(id).disabled = !isEditing);
 
-            document.getElementById('studentEmail').disabled = true;
+        document.getElementById('studentEmail').disabled = true;
 
         button.textContent = isEditing ? 'Save' : 'Edit';
 
-        // If saving
         if (!isEditing) {
             const sys_ID = localStorage.getItem('user_sys_ID');
             const updatedInfo = {
@@ -128,8 +127,7 @@
                 address: document.getElementById('studentStreet').value.trim() || null,
                 city: document.getElementById('studentCity').value.trim() || null,
                 add_city: document.getElementById('studentState').value.trim() || null,
-                zip_code: parseInt(document.getElementById('studentZip').value) || null,
- /*               phone: document.getElementById('studentPhone').value.trim() || null */
+                zip_code: parseInt(document.getElementById('studentZip').value) || null
             };
 
             try {
@@ -138,14 +136,22 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedInfo)
                 });
+
                 const data = await res.json();
-                alert(data.message || 'Saved successfully!');
+
+                if (!res.ok) {
+                    alert(`Failed to save: ${data.reason || data.message}`);
+                } else {
+                    alert(data.message || 'Saved successfully!');
+                }
+
             } catch (err) {
                 console.error('Failed to update student info:', err);
                 alert('Failed to save. Please try again.');
             }
         }
     }
+
 
     document.addEventListener('DOMContentLoaded', () => {
         const editBtn = document.querySelector('.edit-student-btn');

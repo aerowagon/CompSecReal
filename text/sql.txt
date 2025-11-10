@@ -53,7 +53,7 @@ CREATE TABLE professors (
 
 CREATE TABLE bank (
 	sys_ID INT NOT NULL,
-	account_balance FLOAT(5,2) NOT NULL DEFAULT 0.00,
+	account_balance FLOAT(8,2) NOT NULL DEFAULT 0.00,
 	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
 );
 

@@ -122,10 +122,11 @@
 
           // Highlight the field that caused the error
           if (data.reason) {
-            if (data.reason.includes('GPA')) document.getElementById('GPA').style.borderColor = 'red';
-            if (data.reason.includes('credits')) document.getElementById('total_credits').style.borderColor = 'red';
-            if (data.reason.includes('account balance')) document.getElementById('account_balance').style.borderColor = 'red';
-          }
+          if (data.reason.includes('GPA')) document.getElementById('GPA').style.borderColor = 'red';
+          if (data.reason.includes('credits')) document.getElementById('total_credits').style.borderColor = 'red';
+          if (data.reason.includes('account balance')) document.getElementById('account_balance').style.borderColor = 'red';
+        }
+
         } else {
           messageBox.textContent = data.message || 'Update successful!';
           messageBox.style.color = 'green';

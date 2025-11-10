@@ -366,23 +366,40 @@ const updateQuery = `
 
 app.put('/update-student-info/:sys_ID', (req, res) => {
   const { sys_ID } = req.params;
-  const { email, address, city, add_city, zip_code, phone } = req.body;
+  const { email, address, city, add_city, zip_code /*, phone*/ } = req.body;
 
   const updateQuery = `
     UPDATE students
-    SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?, 
+    SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?
     WHERE sys_ID = ?
   `;
 
-  db.query(updateQuery, [email, address, city, add_city, zip_code,/* phone,*/ sys_ID], (err, result) => {
+  db.query(updateQuery, [email, address, city, add_city, zip_code, sys_ID], (err, result) => {
     if (err) {
       console.error('Failed to update student info:', err);
-      return res.status(500).json({ message: 'Failed to update student info' });
+
+      let reason = 'Unknown error occurred while saving.';
+
+      if (err.code === 'ER_DUP_ENTRY') {
+        reason = 'This email is already in use by another student.';
+      } else if (err.code === 'ER_BAD_NULL_ERROR') {
+        reason = 'A required field is missing.';
+      } else if (err.code === 'ER_DATA_TOO_LONG') {
+        reason = 'One of the fields is too long for the database column.';
+      } else if (err.code === 'ER_TRUNCATED_WRONG_VALUE' || err.errno === 3819) {
+        reason = 'ZIP code must be 5 digits.';
+      }
+
+      return res.status(500).json({
+        message: 'Failed to update student info.',
+        reason
+      });
     }
 
     return res.json({ message: 'Student information updated successfully' });
   });
 });
+
 
 
 
@@ -394,15 +411,28 @@ app.put('/update-student/:blugold_ID', (req, res) => {
   const { blugold_ID } = req.params;
   const { GPA, account_balance, total_credits } = req.body;
 
-  // Update GPA and total_credits in students table
+  // Server-side field validation
+  if (GPA !== undefined && (isNaN(GPA) || GPA < 0 || GPA > 5)) {
+    return res.status(400).json({ message: 'Update failed', reason: 'GPA is a wrong value' });
+  }
+
+  if (total_credits !== undefined && (isNaN(total_credits) || total_credits < 0)) {
+    return res.status(400).json({ message: 'Update failed', reason: 'Total credits is a wrong value' });
+  }
+
+  if (account_balance !== undefined && isNaN(account_balance)) {
+    return res.status(400).json({ message: 'Update failed', reason: 'Account balance is a wrong value' });
+  }
+
+  // Update students table
   const updateStudent = 'UPDATE students SET GPA = ?, total_credits = ? WHERE blugold_ID = ?';
   db.query(updateStudent, [GPA, total_credits, blugold_ID], (err) => {
     if (err) {
       console.error('Failed to update student info:', err);
-      return res.status(500).json({ message: 'Failed to update student info' });
+      return res.status(500).json({ message: 'Failed to update student info', reason: 'Database error' });
     }
 
-    // Update account_balance in bank table
+    // Update bank table
     const updateBank = `
       UPDATE bank 
       JOIN students ON bank.sys_ID = students.sys_ID 
@@ -412,13 +442,14 @@ app.put('/update-student/:blugold_ID', (req, res) => {
     db.query(updateBank, [account_balance, blugold_ID], (err) => {
       if (err) {
         console.error('Failed to update account_balance:', err);
-        return res.status(500).json({ message: 'Failed to update account_balance' });
+        return res.status(500).json({ message: 'Failed to update account_balance', reason: 'Database error' });
       }
 
       res.json({ message: 'Student updated successfully' });
     });
   });
 });
+
 
 
 /////////////////// Student.html page  /////////////////
