@@ -61,7 +61,12 @@
                 <input type="text" id="facultyZip" name="zip_code" pattern="\d{5}" placeholder="12345" />
             </label>
 
+            <strong></strong>
+
             <button type="button" class="edit-faculty-btn">Edit</button>
+            <label id="date"></label>
+            <label id="time"></label>
+
 
             <h3>Account</h3>
             <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
@@ -95,6 +100,8 @@ async function loadFacultyInfo() {
     try {
         const res = await fetch(`/faculty-info/${sys_ID}`);
         const faculty = await res.json();
+        const dateObj = new Date();
+
 
         document.getElementById('facultyName').textContent = `${faculty.f_name} ${faculty.l_name}`;
         document.getElementById('facultyID').textContent = sys_ID;
@@ -105,6 +112,9 @@ async function loadFacultyInfo() {
         document.getElementById('facultyState').value = faculty.add_city || '';
         document.getElementById('facultyZip').value = faculty.zip_code || '';
         document.getElementById('usernameDisplay').textContent = `${faculty.f_name} ${faculty.l_name}`;
+        document.getElementById('date').innerHTML= `${dateObj.toDateString()}`;
+        document.getElementById('time').innerHTML = `${dateObj.toTimeString()}`;
+
     } catch (err) {
         console.error('Failed to load faculty info:', err);
     }

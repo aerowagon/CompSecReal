@@ -74,6 +74,9 @@
     <label style="font-family: Arial, Helvetica, sans-serif;display: block; margin: 0.5rem 0; color: #2b3594; font-size: 1rem; font-weight: bold;">Total account_balance:
       <input type="number" step="0.01" id="account_balance">
     </label><br>
+    
+    <label id="date"></label>
+    <label id="time"></label>
 
     <button type="submit">Save Changes</button>
     <div id="messageBox" style="margin-top:10px;font-weight:bold;"></div>
@@ -86,6 +89,7 @@
     async function fetchStudent() {
       const res = await fetch(`/student/${blugold_ID}`);
       const student = await res.json();
+      const dateObj = new Date();
 
       document.getElementById('fullName').textContent = `${student.f_name} ${student.l_name}`;
       document.getElementById('email').textContent = student.email;
@@ -94,6 +98,8 @@
       document.getElementById('GPA').value = student.GPA ?? '';
       document.getElementById('account_balance').value = student.account_balance ?? '';
       document.getElementById('total_credits').value = student.total_credits ?? 0;
+      document.getElementById('date').innerHTML= `${dateObj.toDateString()}`;
+      document.getElementById('time').innerHTML = `${dateObj.toTimeString()}`;
     }
 
     document.getElementById('editStudentForm').addEventListener('submit', async (e) => {

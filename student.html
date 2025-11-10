@@ -64,6 +64,9 @@
                     <input type="text" id="studentZip" name="zip_code" pattern="\d{5}" placeholder="12345" />
                 </label>
 
+                <div id="date"></div>
+                <div id="time"></div>
+
                 <button type="button" class="edit-student-btn">Edit</button>
             </div>
 
@@ -93,6 +96,7 @@
         try {
             const res = await fetch(`/student-by-sysid/${sys_ID}`);
             const student = await res.json();
+            const dateObj = new Date();
 
             document.getElementById('studentName').textContent = `${student.f_name} ${student.l_name}`;
             document.getElementById('blugoldID').textContent = student.blugold_ID;
@@ -106,6 +110,8 @@
             document.getElementById('studentCredits').textContent = student.total_credits || '0';
             document.getElementById('studentBalance').textContent = student.account_balance?.toFixed(2) || '0.00';
             document.getElementById('usernameDisplay').textContent = `${student.f_name} ${student.l_name}`;
+            document.getElementById('date').innerHTML= `${dateObj.toDateString()}`;
+            document.getElementById('time').innerHTML = `${dateObj.toTimeString()}`;
         } catch (err) {
             console.error('Failed to load student info:', err);
         }
