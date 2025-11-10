@@ -155,15 +155,28 @@ async function toggleEdit(button) {
         try {
             const res = await fetch(`/update-faculty/${sys_ID}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedInfo)
             });
+
             const data = await res.json();
+
+            if (!res.ok) {
+                // Server returned error info
+                alert(`Update failed: ${data.reason || data.message}`);
+                return;
+            }
+
             alert(data.message || 'Saved successfully!');
-        } catch (err) {
+            } catch (err) {
             console.error('Failed to update faculty info:', err);
-            alert('Failed to save. Please try again.');
+            if (err.message) {
+                alert('Failed to save: ' + err.message);
+            } else {
+                alert('Failed to save. Please check console for details.');
+            }
         }
+
     }
 }
 

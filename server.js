@@ -336,8 +336,26 @@ const updateQuery = `
   db.query(updateQuery, [email, address, city, add_city, zip_code, /*phone,*/ sys_ID], (err, result) => {
     if (err) {
       console.error('Failed to update faculty info:', err);
-      return res.status(500).json({ message: 'Failed to update faculty info' });
+
+      // Give user-friendly reason
+      let reason = 'Unknown error occurred while saving.';
+
+      if (err.code === 'ER_DUP_ENTRY') {
+        reason = 'This email is already in use by another faculty member.';
+      } else if (err.code === 'ER_BAD_NULL_ERROR') {
+        reason = 'A required field is missing.';
+      } else if (err.code === 'ER_DATA_TOO_LONG') {
+        reason = 'One of the fields is too long for the database column.';
+      } else if (err.code === 'ER_CHECK_CONSTRAINT_VIOLATED' || err.errno === 3819) {
+        reason = 'ZIP code must be 5 digits.';
+      }
+
+      return res.status(500).json({
+        message: 'Failed to update faculty info.',
+        reason: reason
+      });
     }
+
 
     return res.json({ message: 'Faculty information updated successfully' });
   });

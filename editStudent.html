@@ -76,6 +76,7 @@
     </label><br>
 
     <button type="submit">Save Changes</button>
+    <div id="messageBox" style="margin-top:10px;font-weight:bold;"></div>
   </form>
 
   <script>
@@ -97,20 +98,47 @@
 
     document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const GPA = document.getElementById('GPA').value;
       const account_balance = document.getElementById('account_balance').value;
       const total_credits = document.getElementById('total_credits').value;
+      const messageBox = document.getElementById('messageBox');
 
-      const res = await fetch(`/update-student/${blugold_ID}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ GPA, account_balance, total_credits }),
-      });
+      messageBox.textContent = 'Saving...';
+      messageBox.style.color = 'gray';
 
-      if (res.ok) {
-        alert('Update successful!');
-      } else {
-        alert('Update failed.');
+      try {
+        const res = await fetch(`/update-student/${blugold_ID}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ GPA, account_balance, total_credits }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          messageBox.textContent = `Update failed: ${data.reason || data.message}`;
+          messageBox.style.color = 'red';
+
+          // Highlight the field that caused the error
+          if (data.reason) {
+            if (data.reason.includes('GPA')) document.getElementById('GPA').style.borderColor = 'red';
+            if (data.reason.includes('credits')) document.getElementById('total_credits').style.borderColor = 'red';
+            if (data.reason.includes('account balance')) document.getElementById('account_balance').style.borderColor = 'red';
+          }
+        } else {
+          messageBox.textContent = data.message || 'Update successful!';
+          messageBox.style.color = 'green';
+
+          // Reset borders
+          ['GPA', 'total_credits', 'account_balance'].forEach(id => {
+            document.getElementById(id).style.borderColor = '#eef3fb';
+          });
+        } 
+      } catch (err) {
+        console.error('❌ Network or script error:', err);
+        messageBox.textContent = 'Network error. Please try again.';
+        messageBox.style.color = 'red';
       }
     });
 
