@@ -83,13 +83,33 @@
   </form>
 
   <script>
+    
     const urlParams = new URLSearchParams(window.location.search);
     const blugold_ID = urlParams.get('blugold_ID');
+
+    async function checkLogin() {
+      let results = null;
+      try {
+          const res = await fetch(`/session`);
+          results = await res.json();
+      } catch (err) {
+          console.error('Failed to get session:', err);
+      }
+
+      if (results.status == 'true' && results.permissions == 1) {
+        console.log('verified');
+        return true;
+      }
+
+      else {
+        return false;
+      }
+
+  }
 
     async function fetchStudent() {
       const res = await fetch(`/student/${blugold_ID}`);
       const student = await res.json();
-      const dateObj = new Date();
 
       document.getElementById('fullName').textContent = `${student.f_name} ${student.l_name}`;
       document.getElementById('email').textContent = student.email;
@@ -98,8 +118,7 @@
       document.getElementById('GPA').value = student.GPA ?? '';
       document.getElementById('account_balance').value = student.account_balance ?? '';
       document.getElementById('total_credits').value = student.total_credits ?? 0;
-      document.getElementById('date').innerHTML= `${dateObj.toDateString()}`;
-      document.getElementById('time').innerHTML = `${dateObj.toTimeString()}`;
+      document.getElementById('date').innerHTML= student.updated_at;
     }
 
     document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
@@ -149,7 +168,13 @@
       }
     });
 
-    fetchStudent();
+    if (checkLogin()) {
+      fetchStudent();
+    }
+    else {
+      window.location.href = 'http://localhost:3000/login.html';
+    }
+    
   </script>
   </section>
 </body>

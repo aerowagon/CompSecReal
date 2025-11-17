@@ -127,6 +127,42 @@
   </section>
 
   <script>
+    async function checkLogin() {
+      let results = null;
+      try {
+          const res = await fetch(`/session`);
+          results = await res.json();
+      } catch (err) {
+          console.error('Failed to get session:', err);
+      }
+
+      if (results.status == 'true' && results.permissions == 1) {
+        return true;
+      }
+
+      else {
+        return false;
+      }
+
+  }
+
+  if (!checkLogin()) {
+    window.location.href = 'http://localhost:3000/login.html';
+  }
+
+  async function getID() {
+            let sys_ID = null;
+        try {
+            const result = await fetch(`/get_id`);
+            const id = await result.json();
+            sys_ID = id;
+        }   catch (err) {
+            console.log('Failed to retrieve system ID')
+        }
+
+        return sys_ID;
+}
+
     document.getElementById('createUserForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 

@@ -5,57 +5,65 @@
 CREATE DATABASE compsec_project;
 USE compsec_project;
 
-CREATE TABLE users(
-    sys_ID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-    email VARCHAR(255) NOT NULL
-);
+	CREATE TABLE users(
+		sys_ID INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+		email VARCHAR(255) NOT NULL
+	);
 
-CREATE TABLE sessions (
-	id INT AUTO_INCREMENT PRIMARY KEY,
-	email VARCHAR(255) NOT NULL,
-	sess_token INT NOT NULL,
-	permissions BOOLEAN NOT NULL
-);
+	CREATE TABLE sessions (
+		id INT AUTO_INCREMENT PRIMARY KEY,
+		email VARCHAR(255) NOT NULL,
+		sess_token varchar(255) NOT NULL,
+		permissions BOOLEAN NOT NULL,
+		expiration_date TIMESTAMP NOT NULL
+	);
 
-CREATE TABLE students (
-	sys_ID INT,
-	blugold_ID INT AUTO_INCREMENT PRIMARY KEY,
-	email VARCHAR(255) NOT NULL,
-	f_name VARCHAR(255) NOT NULL,
-	l_name VARCHAR(255) NOT NULL,
-	GPA FLOAT(3,2) NOT NULL DEFAULT 0.00,
-	CONSTRAINT chk_gpa_range CHECK (GPA >= 0.00 AND GPA <= 5.00),
-	address VARCHAR(255) NOT NULL,
-	city VARCHAR(100) NOT NULL,
-	add_city VARCHAR(100) NOT NULL,
-	zip_code CHAR(5) NOT NULL,
-	CONSTRAINT chk_students_zip_code CHECK (zip_code REGEXP '^[0-9]{5}$'),
-	total_credits INT DEFAULT 0,
-	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
+	CREATE TABLE students (
+		sys_ID INT,
+		blugold_ID INT AUTO_INCREMENT PRIMARY KEY,
+		email VARCHAR(255) NOT NULL,
+		f_name VARCHAR(255) NOT NULL,
+		l_name VARCHAR(255) NOT NULL,
+		GPA FLOAT(3,2) NOT NULL DEFAULT 0.00,
+		CONSTRAINT chk_gpa_range CHECK (GPA >= 0.00 AND GPA <= 5.00),
+		address VARCHAR(255) NOT NULL,
+		city VARCHAR(100) NOT NULL,
+		add_city VARCHAR(100) NOT NULL,
+		zip_code CHAR(5) NOT NULL,
+		CONSTRAINT chk_students_zip_code CHECK (zip_code REGEXP '^[0-9]{5}$'),
+		total_credits INT DEFAULT 0,
+		FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
 
-);
+	);
 
-CREATE TABLE professors (
-	sys_ID INT,
-	email VARCHAR(255) NOT NULL UNIQUE,
-	f_name VARCHAR(255) NOT NULL,
-	l_name VARCHAR(255) NOT NULL,
-	GPA DOUBLE NOT NULL,
-	address VARCHAR(255) NOT NULL,
-	city VARCHAR(100) NOT NULL,
-	add_city VARCHAR(100) NOT NULL,
-	zip_code CHAR(5) NOT NULL,
-	CONSTRAINT chk_professors_zip_code CHECK (zip_code REGEXP '^[0-9]{5}$'),
-	PRIMARY KEY (email),
-	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
-	
-);
+	CREATE TABLE professors (
+		sys_ID INT,
+		email VARCHAR(255) NOT NULL UNIQUE,
+		f_name VARCHAR(255) NOT NULL,
+		l_name VARCHAR(255) NOT NULL,
+		GPA DOUBLE NOT NULL,
+		address VARCHAR(255) NOT NULL,
+		city VARCHAR(100) NOT NULL,
+		add_city VARCHAR(100) NOT NULL,
+		zip_code CHAR(5) NOT NULL,
+		CONSTRAINT chk_professors_zip_code CHECK (zip_code REGEXP '^[0-9]{5}$'),
+		PRIMARY KEY (email),
+		FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
+		
+	);
 
-CREATE TABLE bank (
-	sys_ID INT NOT NULL,
-	account_balance FLOAT(8,2) NOT NULL DEFAULT 0.00,
-	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
-);
+	CREATE TABLE bank (
+		sys_ID INT NOT NULL,
+		account_balance FLOAT(8,2) NOT NULL DEFAULT 0.00,
+		FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
+	);
+
+	CREATE TABLE updates (
+		sys_ID INT NOT NULL,
+		date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		sess_token INT,
+		table_updated varchar(50) NOT NULL
+	)
 
 
 -- second database
@@ -140,11 +148,6 @@ INSERT INTO bank (sys_ID, account_balance) VALUES
 (9, 120.00),
 (10, 130.00),
 (11, 140.00);
-
-INSERT INTO sessions (email, sess_token, permissions)
-VALUES
-('faculty1@uwec.edu', 111111, TRUE),
-('fakestudent1@uwec.edu', 222222, FALSE);
 
 
 -- Insert authentication info

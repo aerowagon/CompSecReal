@@ -65,7 +65,6 @@
                 </label>
 
                 <div id="date"></div>
-                <div id="time"></div>
 
                 <button type="button" class="edit-student-btn">Edit</button>
             </div>
@@ -75,46 +74,70 @@
                 <h3>Academic Information</h3>
                 <p><strong>GPA:</strong> <span id="studentGPA"></span></p>
                 <p><strong>Total Class Credits:</strong> <span id="studentCredits"></span></p>
-                <p><strong>Account Balance:</strong> $<span id="studentBalance"></span></p>
+                <p><strong>Account Balance:</strong> $<span id="studentBalance"></span></p>''
 
                 <h3>Account</h3>
                 <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
                 <p><strong>Password:</strong> •••••••••</p>
-                <button type="button" id="logoutBtn" onclick="window.location.href='login.html'">Log Out</button>
+                <button type="button" class="logoutBtn">Log Out</button>
             </div>
         </div>
     </section>
 
     <script>
+
     async function loadStudentInfo() {
-        const sys_ID = localStorage.getItem('user_sys_ID');
-        if (!sys_ID) {
-            console.error('No sys_ID found in localStorage');
-            return;
-        }
-
+        let result = null;
         try {
-            const res = await fetch(`/student-by-sysid/${sys_ID}`);
-            const student = await res.json();
-            const dateObj = new Date();
-
-            document.getElementById('studentName').textContent = `${student.f_name} ${student.l_name}`;
-            document.getElementById('blugoldID').textContent = student.blugold_ID;
-/*            document.getElementById('studentPhone').value = student.phone || '';  */
-            document.getElementById('studentEmail').value = student.email || '';
-            document.getElementById('studentStreet').value = student.address || '';
-            document.getElementById('studentCity').value = student.city || '';
-            document.getElementById('studentState').value = student.add_city || '';
-            document.getElementById('studentZip').value = student.zip_code || '';
-            document.getElementById('studentGPA').textContent = student.GPA || '0.00';
-            document.getElementById('studentCredits').textContent = student.total_credits || '0';
-            document.getElementById('studentBalance').textContent = student.account_balance?.toFixed(2) || '0.00';
-            document.getElementById('usernameDisplay').textContent = `${student.f_name} ${student.l_name}`;
-            document.getElementById('date').innerHTML= `${dateObj.toDateString()}`;
-            document.getElementById('time').innerHTML = `${dateObj.toTimeString()}`;
+            const res = await fetch(`/session`);
+            result = await res.json();
         } catch (err) {
-            console.error('Failed to load student info:', err);
+            console.error('Failed to get session:', err);
         }
+        
+
+         if (result.status==='true') {
+                const id = result.id;
+                try {
+                const res = await fetch(`/student-by-sysid/${id}`);
+                const student = await res.json();
+                console.log(student);
+
+                document.getElementById('studentName').textContent = `${student.f_name} ${student.l_name}`;
+                document.getElementById('blugoldID').textContent = student.blugold_ID;
+    /*            document.getElementById('studentPhone').value = student.phone || '';  */
+                document.getElementById('studentEmail').value = student.email || '';
+                document.getElementById('studentStreet').value = student.address || '';
+                document.getElementById('studentCity').value = student.city || '';
+                document.getElementById('studentState').value = student.add_city || '';
+                document.getElementById('studentZip').value = student.zip_code || '';
+                document.getElementById('studentGPA').textContent = student.GPA || '0.00';
+                document.getElementById('studentCredits').textContent = student.total_credits || '0';
+                document.getElementById('studentBalance').textContent = student.account_balance?.toFixed(2) || '0.00';
+                document.getElementById('usernameDisplay').textContent = `${student.f_name} ${student.l_name}`;
+                document.getElementById('date').textContent = student.updated_at;
+            } catch (err) {
+                console.error('Failed to load student info:', err);
+            }
+        }
+
+        else {
+            console.log('switching');
+            window.location.href = result.info;
+        }
+    }
+
+    async function getID() {
+        let sys_ID = null;
+        try {
+            const result = await fetch(`/get_id`);
+            const id = await result.json();
+            sys_ID = id;
+        }   catch (err) {
+            console.log('Failed to retrieve system ID')
+        }
+
+        return sys_ID;
     }
 
     async function toggleEdit(button) {
@@ -126,8 +149,11 @@
 
         button.textContent = isEditing ? 'Save' : 'Edit';
 
+        const sys_ID = await getID();
+        
+
         if (!isEditing) {
-            const sys_ID = localStorage.getItem('user_sys_ID');
+            
             const updatedInfo = {
                 email: document.getElementById('studentEmail').value.trim() || null,
                 address: document.getElementById('studentStreet').value.trim() || null,
@@ -135,7 +161,6 @@
                 add_city: document.getElementById('studentState').value.trim() || null,
                 zip_code: parseInt(document.getElementById('studentZip').value) || null
             };
-
             try {
                 const res = await fetch(`/update-student-info/${sys_ID}`, {
                     method: 'PUT',
@@ -158,10 +183,29 @@
         }
     }
 
+    async function logout() {
+        
+        try {
+            console.log('logging out');
+            const res = await fetch(`/logout`);
+            result = await res.json();
+            
+        } catch (err) {
+            console.error('Failed to get session:', err);
+        }
+        
+    }
+
 
     document.addEventListener('DOMContentLoaded', () => {
         const editBtn = document.querySelector('.edit-student-btn');
         if (editBtn) editBtn.addEventListener('click', () => toggleEdit(editBtn));
+
+        //set logout
+        const logoutBtn = document.querySelector('.logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
+
+        //load info
         loadStudentInfo();
     });
     </script>

@@ -71,7 +71,7 @@
             <h3>Account</h3>
             <p><strong>Username:</strong> <span id="usernameDisplay"></span></p>
             <p><strong>Password:</strong> •••••••••</p>
-            <button type="button" id="logoutBtn" onclick="window.location.href='login.html'">Log Out</button>
+            <button type="button" class="logoutBtn">Log Out</button>
         </div>
 
         <!-- Student Controls -->
@@ -93,15 +93,24 @@
 </section>
 
 <script>
-async function loadFacultyInfo() {
-    const sys_ID = localStorage.getItem('user_sys_ID');
-    if (!sys_ID) return;
 
+
+async function loadFacultyInfo() {
+    let results = null;
     try {
+        console.log('fetching session');
+        const res = await fetch(`/session`);
+        results = await res.json();
+    } catch (err) {
+        console.error('Failed to get session:', err);
+    }
+
+    const sys_ID = results.id;
+
+    if (results.status == 'true' && results.permissions == 1) {
+        try {
         const res = await fetch(`/faculty-info/${sys_ID}`);
         const faculty = await res.json();
-        const dateObj = new Date();
-
 
         document.getElementById('facultyName').textContent = `${faculty.f_name} ${faculty.l_name}`;
         document.getElementById('facultyID').textContent = sys_ID;
@@ -112,15 +121,25 @@ async function loadFacultyInfo() {
         document.getElementById('facultyState').value = faculty.add_city || '';
         document.getElementById('facultyZip').value = faculty.zip_code || '';
         document.getElementById('usernameDisplay').textContent = `${faculty.f_name} ${faculty.l_name}`;
-        document.getElementById('date').innerHTML= `${dateObj.toDateString()}`;
-        document.getElementById('time').innerHTML = `${dateObj.toTimeString()}`;
+        document.getElementById('date').innerHTML= faculty.updated_at;
 
     } catch (err) {
         console.error('Failed to load faculty info:', err);
     }
+
+    loadStudents();
+
+    }
+
+    else {
+            console.log('switching');
+            window.location.href = results.info;
+    }
+    
 }
 
 async function loadStudents() {
+ console.log('loading students');
     try {
         const res = await fetch('/get-students');
         const students = await res.json();
@@ -144,6 +163,32 @@ async function loadStudents() {
     }
 }
 
+async function getID() {
+            let sys_ID = null;
+        try {
+            const result = await fetch(`/get_id`);
+            const id = await result.json();
+            sys_ID = id;
+        }   catch (err) {
+            console.log('Failed to retrieve system ID')
+        }
+
+        return sys_ID;
+}
+
+async function logout() {
+        
+        try {
+            console.log('logging out');
+            const res = await fetch(`/logout`);
+            result = await res.json();
+            
+        } catch (err) {
+            console.error('Failed to get session:', err);
+        }
+        
+    }
+
 async function toggleEdit(button) {
     const isEditing = button.textContent === 'Edit';
     [/*'facultyPhone'*/,'facultyEmail','facultyStreet','facultyCity','facultyState','facultyZip'].forEach(id => {
@@ -151,8 +196,10 @@ async function toggleEdit(button) {
     });
     button.textContent = isEditing ? 'Save' : 'Edit';
 
+    
+
+
     if (!isEditing) {
-        const sys_ID = localStorage.getItem('user_sys_ID');
         const updatedInfo = {
             email: document.getElementById('facultyEmail').value.trim() || null,
             address: document.getElementById('facultyStreet').value.trim() || null,
@@ -161,6 +208,8 @@ async function toggleEdit(button) {
             zip_code: document.getElementById('facultyZip').value.trim() || null,
             /*phone: document.getElementById('facultyPhone').value.trim() || null */
         };
+
+        const sys_ID = await getID();
 
         try {
             const res = await fetch(`/update-faculty/${sys_ID}`, {
@@ -191,10 +240,13 @@ async function toggleEdit(button) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log()
     const editBtn = document.querySelector('.edit-faculty-btn');
     if (editBtn) editBtn.addEventListener('click', () => toggleEdit(editBtn));
+    const logoutBtn = document.querySelector('.logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
+
     loadFacultyInfo();
-    loadStudents();
 });
 </script>
 </body>
