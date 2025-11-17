@@ -51,7 +51,6 @@ app.post('/add-user', (req, res) => {
     password,
     f_name,
     l_name,
-   /* blugold_ID,*/
     address,
     city,
     add_city,
@@ -85,44 +84,46 @@ app.post('/add-user', (req, res) => {
 
       // Step 3: Insert into role-specific table
       let roleQuery = '';
-      const commonParams = [sys_ID, email, f_name, l_name, 0, address || '', city || '', add_city || '', zip_code || null];
+      const commonParams = [sys_ID, email, f_name, l_name, address || '', city || '', add_city || '', zip_code || null];
 
       /*if (role === 'student') {
-        roleQuery = 'INSERT INTO students (sys_ID, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        roleQuery = 'INSERT INTO students (sys_ID, f_name, l_name, GPA, address, city, add_city, zip_code) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
         commonParams.splice(1, 0, blugold_ID); // insert blugold_ID after sys_ID
       } else if (role === 'faculty') {
-        roleQuery = 'INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        roleQuery = 'INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
       } else {
         return res.status(400).json({ message: 'Invalid role specified' });
       }*/
 
         /////I replaced the above commented out code with this://////
 
-        if (role === 'student') {
+    if (role === 'student') {
   // Students table doesn’t need blugold_ID manually — MySQL handles it
       roleQuery = `
         INSERT INTO students (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, 0.00, ?, ?, ?, ?)
       `;
     } else if (role === 'faculty') {
       roleQuery = `
         INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, 0.00, ?, ?, ?, ?)
       `;
     } else {
       return res.status(400).json({ message: 'Invalid role specified' });
     }
 
 
-      db.query(roleQuery, commonParams, (err, roleResult) => {
-        if (err) {
-          console.error('Insert role error:', err);
-          return res.status(500).json({ message: 'Failed to insert into role table' });
-        }
+    db.query(roleQuery, commonParams, (err, roleResult) => {
+      if (err) {
+        console.error('Insert role error:', err);
+        return res.status(500).json({ message: 'Failed to insert into role table' });
+      }
 
-        // If user is a student, also insert into bank table
-       if (role === 'student') {
-        console.log('Student role detected, inserting into bank. sys_ID:', sys_ID);
+      // If user is a student, also insert into bank table
+      if (role === 'student') {
+      console.log('Student role detected, inserting into bank. sys_ID:', sys_ID);
 
 
         const insertBank = 'INSERT INTO bank (sys_ID, account_balance) VALUES (?, ?)';
@@ -133,7 +134,7 @@ app.post('/add-user', (req, res) => {
             console.log('Bank row inserted:', bankResult);
           }
         });
-}
+      }
 
         return res.status(200).json({ message: 'User successfully added' });
       });
