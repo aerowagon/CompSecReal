@@ -45,6 +45,21 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
+async function updateInfo(table, sys_ID, sess_token) {
+  console.log('updating table ' + table + ' row ' + sys_ID + ' in session ' + sess_token);
+
+  const query = `INSERT INTO updates
+                (sess_token, updated_table, sys_ID_edited)
+                VALUES (?, ?, ?);`
+
+  db.query(query, [sess_token, table, sys_ID], (err, results) => {
+    if (err) {
+          console.error('Update error:', err);
+        }
+  })
+
+}
+
 app.post('/add-user', (req, res) => {
   const {
     email,
@@ -63,6 +78,8 @@ app.post('/add-user', (req, res) => {
   if (!email || !password || !f_name || !l_name || !role) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
+  let sys_ID = null;
+  let sess_token = req.cookies['session'];
 
   // Step 1: Insert into `users`
   const insertUser = 'INSERT INTO users (email) VALUES (?)';
@@ -72,7 +89,7 @@ app.post('/add-user', (req, res) => {
       return res.status(500).json({ message: 'Failed to insert user' });
     }
 
-    const sys_ID = userResult.insertId;
+
 
     // Step 2: Insert into `authentication`
     const insertAuth = 'INSERT INTO authentication (email, password) VALUES (?, ?)';
@@ -81,6 +98,18 @@ app.post('/add-user', (req, res) => {
         console.error('Insert auth error:', err);
         return res.status(500).json({ message: 'Failed to insert authentication' });
       }
+
+      idQuery = `SELECT sys_ID from users WHERE email = ?`;
+      console.log(email);
+      db.query(idQuery, [email], (err, emailResult) => {
+        console.log(emailResult);
+        let table = 'authentication';
+        sys_ID = emailResult[0].sys_ID;
+        updateInfo(table, sys_ID, sess_token);
+        table = 'users';
+        updateInfo(table, sys_ID, sess_token);
+      
+      //insert into update table
 
       // Step 3: Insert into role-specific table
       let roleQuery = '';
@@ -105,11 +134,15 @@ app.post('/add-user', (req, res) => {
         INSERT INTO students (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
         VALUES (?, ?, ?, ?, 0.00, ?, ?, ?, ?)
       `;
+      table = 'students';
+      updateInfo(table, sys_ID, sess_token);
     } else if (role === 'faculty') {
       roleQuery = `
         INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
         VALUES (?, ?, ?, ?, 0.00, ?, ?, ?, ?)
       `;
+      table = 'professors';
+      updateInfo(table, sys_ID, sess_token);
     } else {
       return res.status(400).json({ message: 'Invalid role specified' });
     }
@@ -131,14 +164,15 @@ app.post('/add-user', (req, res) => {
           if (err) {
             console.error('Insert bank error:', err);
           } else {
-            console.log('Bank row inserted:', bankResult);
+            table = 'bank';
+            updateInfo(table, sys_ID, sess_token);
           }
         });
       }
 
         return res.status(200).json({ message: 'User successfully added' });
       });
-
+      });
     });
   });
 });
@@ -440,7 +474,9 @@ const updateQuery = `
         reason: reason
       });
     }
-
+    const sess_token = req.cookies['session'];
+    table = 'professors';
+    updateInfo(table, sys_ID, sess_token,);
 
     return res.json({ message: 'Faculty information updated successfully' });
   });
@@ -480,6 +516,9 @@ app.put('/update-student-info/:sys_ID', (req, res) => {
         reason
       });
     }
+    const sess_token = req.cookies['session'];
+    let table = 'students';
+    updateInfo(table, sys_ID, sess_token);
 
     return res.json({ message: 'Student information updated successfully' });
   });
@@ -495,7 +534,7 @@ app.put('/update-student-info/:sys_ID', (req, res) => {
 app.put('/update-student/:blugold_ID', (req, res) => {
   const { blugold_ID } = req.params;
   const { GPA, account_balance, total_credits } = req.body;
-
+  const sess_token = req.cookies['session'];
   // Server-side field validation
   if (GPA !== undefined && (isNaN(GPA) || GPA < 0 || GPA > 5)) {
     return res.status(400).json({ message: 'Update failed', reason: 'GPA is a wrong value' });
@@ -517,6 +556,20 @@ app.put('/update-student/:blugold_ID', (req, res) => {
       return res.status(500).json({ message: 'Failed to update student info', reason: 'Database error' });
     }
 
+
+  const SYSquery = `SELECT sys_ID FROM students WHERE blugold_ID = ?;`
+
+  db.query(SYSquery, [blugold_ID], (err, results) => {
+    if (err) {
+          console.error('Update error:', err);
+        }
+    let table = 'students';
+    const sys_ID = results[0].sys_ID;
+    updateInfo(table, sys_ID, sess_token);
+  })
+    
+    
+
     // Update bank table
     const updateBank = `
       UPDATE bank 
@@ -530,7 +583,16 @@ app.put('/update-student/:blugold_ID', (req, res) => {
         return res.status(500).json({ message: 'Failed to update account_balance', reason: 'Database error' });
       }
 
-      res.json({ message: 'Student updated successfully' });
+    db.query(SYSquery, [blugold_ID], (err, results) => {
+      if (err) {
+            console.error('Update error:', err);
+          }
+      let table = 'bank';
+      const sys_ID = results[0].sys_ID;
+      updateInfo(table, sys_ID, sess_token);
+    })
+    
+    res.json({ message: 'Student updated successfully' });
     });
   });
 });
