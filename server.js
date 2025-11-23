@@ -4,6 +4,7 @@ const path = require('path');
 const app = express();
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 
 const port = 3000;
 
@@ -60,6 +61,20 @@ async function updateInfo(table, sys_ID, sess_token) {
 
 }
 
+async function hashPassword(password) {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log(hashedPassword);
+    return hashedPassword;
+}
+
+async function checkPassword(password, hashedPassword) {
+    const match = await bcrypt.compare(password, hashedPassword);
+    console.log(match ? 'Passwords match' : 'Passwords do not match');
+    return match;
+}
+
+
 app.post('/add-user', (req, res) => {
   const {
     email,
@@ -89,11 +104,11 @@ app.post('/add-user', (req, res) => {
       return res.status(500).json({ message: 'Failed to insert user' });
     }
 
-
+    hashPassword(password).then((hashedPassword) => {
 
     // Step 2: Insert into `authentication`
     const insertAuth = 'INSERT INTO authentication (email, password) VALUES (?, ?)';
-    authdb.query(insertAuth, [email, password], (err, authResult) => {
+    authdb.query(insertAuth, [email, hashedPassword], (err, authResult) => {
       if (err) {
         console.error('Insert auth error:', err);
         return res.status(500).json({ message: 'Failed to insert authentication' });
@@ -173,6 +188,7 @@ app.post('/add-user', (req, res) => {
         return res.status(200).json({ message: 'User successfully added' });
       });
       });
+    });
     });
   });
 });
@@ -343,9 +359,10 @@ app.get('/session', (req, res) => {
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
+
   // Step 1: Check authentication
-  const authQuery = 'SELECT * FROM authentication WHERE email = ? AND password = ?';
-  authdb.query(authQuery, [email, password], (err, authResults) => {
+  const authQuery = 'SELECT password FROM authentication WHERE email = ?';
+  authdb.query(authQuery, [email], (err, authResults) => {
     if (err) {
       console.error('Auth error:', err);
       return res.status(500).json({ message: 'Server error during login.' });
@@ -355,6 +372,15 @@ app.post('/login', (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
+    let hPassword = authResults[0].password;
+    checkPassword(password, hPassword).then((match) => {
+      if(!match) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+      }
+    
+
+
+    if(match) {
     // Step 2: Get sys_ID from users table
     const userQuery = 'SELECT sys_ID FROM users WHERE email = ?';
     db.query(userQuery, [email], (err, userResults) => {
@@ -435,6 +461,8 @@ app.post('/login', (req, res) => {
           return res.status(403).json({ message: 'User has no associated role.' });
         });
       });
+    });
+  }
     });
   });
 });

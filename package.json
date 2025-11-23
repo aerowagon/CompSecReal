@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/aerowagon/CompSecReal#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "crypto": "^1.0.1",
     "crypto-js": "^4.2.0",
