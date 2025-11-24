@@ -155,5 +155,6 @@ USE compsec_project_auth;
 
 INSERT INTO authentication (email, password)
 VALUES
-('faculty1@uwec.edu', 'faculty'),
-('fakestudent1@uwec.edu', 'student');
+('faculty1@uwec.edu', '$2b$10$8eA6chDoxL0I6GL7/Dz94ej1KPiSsOvBYsld7zYxwPgQ0flIMkpF.'),
+('fakestudent1@uwec.edu', '$2b$10$H7KM61rm4UxsD0ZbBerjBuzqS3Ltc4GMFJMT86kA7/IlOpZTgq.e.');
+
