@@ -193,7 +193,8 @@
             console.log('logging out');
             const res = await fetch(`/logout`);
             result = await res.json();
-            
+            console.log(result);
+            window.location.href = result;
         } catch (err) {
             console.error('Failed to get session:', err);
         }

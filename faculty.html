@@ -177,11 +177,12 @@ async function getID() {
 }
 
 async function logout() {
-        
+        console.log('logging out');
         try {
             console.log('logging out');
             const res = await fetch(`/logout`);
             result = await res.json();
+            window.location.href = "http://localhost:3000/login.html";
             
         } catch (err) {
             console.error('Failed to get session:', err);

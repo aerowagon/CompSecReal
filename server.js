@@ -657,7 +657,7 @@ app.get('/student-by-sysid/:sys_ID', (req, res) => {
 //////logout////
 app.get(`/logout`, (req,res) => {
   const sess = req.cookies['session'];
-  
+  res.clearCookie("session");
   const query = `
     DELETE FROM sessions
     WHERE sess_token = ?
@@ -668,10 +668,9 @@ app.get(`/logout`, (req,res) => {
       console.error('Failed to log out', err);
       return res.status(500).json({ message: 'Database error' });
     }
+    res.json('http://localhost:3000/login.html');
     
   })
-
-  res.clearCookie("session");
   
 })
 
