@@ -3,6 +3,9 @@ const mysql = require('mysql');
 const path = require('path');
 const app = express();
 const cookieParser = require('cookie-parser');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+
 const port = 3000;
 
 // Parse form and JSON
@@ -43,6 +46,35 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
+async function updateInfo(table, sys_ID, sess_token) {
+  console.log('updating table ' + table + ' row ' + sys_ID + ' in session ' + sess_token);
+
+  const query = `INSERT INTO updates
+                (sess_token, updated_table, sys_ID_edited)
+                VALUES (?, ?, ?);`
+
+  db.query(query, [sess_token, table, sys_ID], (err, results) => {
+    if (err) {
+          console.error('Update error:', err);
+        }
+  })
+
+}
+
+async function hashPassword(password) {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log(hashedPassword);
+    return hashedPassword;
+}
+
+async function checkPassword(password, hashedPassword) {
+    const match = await bcrypt.compare(password, hashedPassword);
+    console.log(match ? 'Passwords match' : 'Passwords do not match');
+    return match;
+}
+
+
 app.post('/add-user', (req, res) => {
   const {
     email,
@@ -61,6 +93,8 @@ app.post('/add-user', (req, res) => {
   if (!email || !password || !f_name || !l_name || !role) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
+  let sys_ID = null;
+  let sess_token = req.cookies['session'];
 
   // Step 1: Insert into `users`
   const insertUser = 'INSERT INTO users (email) VALUES (?)';
@@ -70,15 +104,27 @@ app.post('/add-user', (req, res) => {
       return res.status(500).json({ message: 'Failed to insert user' });
     }
 
-    const sys_ID = userResult.insertId;
+    hashPassword(password).then((hashedPassword) => {
 
     // Step 2: Insert into `authentication`
     const insertAuth = 'INSERT INTO authentication (email, password) VALUES (?, ?)';
-    authdb.query(insertAuth, [email, password], (err, authResult) => {
+    authdb.query(insertAuth, [email, hashedPassword], (err, authResult) => {
       if (err) {
         console.error('Insert auth error:', err);
         return res.status(500).json({ message: 'Failed to insert authentication' });
       }
+
+      idQuery = `SELECT sys_ID from users WHERE email = ?`;
+      console.log(email);
+      db.query(idQuery, [email], (err, emailResult) => {
+        console.log(emailResult);
+        let table = 'authentication';
+        sys_ID = emailResult[0].sys_ID;
+        updateInfo(table, sys_ID, sess_token);
+        table = 'users';
+        updateInfo(table, sys_ID, sess_token);
+      
+      //insert into update table
 
       // Step 3: Insert into role-specific table
       let roleQuery = '';
@@ -103,11 +149,15 @@ app.post('/add-user', (req, res) => {
         INSERT INTO students (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
         VALUES (?, ?, ?, ?, 0.00, ?, ?, ?, ?)
       `;
+      table = 'students';
+      updateInfo(table, sys_ID, sess_token);
     } else if (role === 'faculty') {
       roleQuery = `
         INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code)
         VALUES (?, ?, ?, ?, 0.00, ?, ?, ?, ?)
       `;
+      table = 'professors';
+      updateInfo(table, sys_ID, sess_token);
     } else {
       return res.status(400).json({ message: 'Invalid role specified' });
     }
@@ -129,14 +179,16 @@ app.post('/add-user', (req, res) => {
           if (err) {
             console.error('Insert bank error:', err);
           } else {
-            console.log('Bank row inserted:', bankResult);
+            table = 'bank';
+            updateInfo(table, sys_ID, sess_token);
           }
         });
       }
 
         return res.status(200).json({ message: 'User successfully added' });
       });
-
+      });
+    });
     });
   });
 });
@@ -219,16 +271,98 @@ app.get('/student/:blugold_ID', (req, res) => {
   });
 });
 
+///autologin for page
+app.get('/session', (req, res) => {
 
+  const cookie = req.cookies['session'];
+
+  if (!cookie) {
+    console.log('no cookie found');
+    return res.json({
+      status: 'false',
+      info: 'http://localhost:3000/login.html'
+    });
+  }
+
+  else {
+    //check cookie
+    const sess_token = cookie;
+    let permissions = null;
+
+    //check for session token in database
+    const query = 'SELECT permissions, email FROM sessions WHERE sess_token = ?';
+    db.query(query, [sess_token], (err, authResults) => {
+      
+
+      if(err) {
+        console.error('Auth error:', err);
+        return res.status(500).json({ message: 'Server error during session verification.' });
+      }
+
+      if (authResults.length===0) {
+        return res.json({
+          status: 'false',
+          info: 'http://localhost:3000/login.html'
+        });
+
+      }
+
+      permissions = authResults[0].permissions;
+      
+
+    
+    //check to see if user is a professor
+    if (permissions==1) {
+      const query = 'SELECT sys_ID FROM professors WHERE email = ?';
+      db.query(query, [authResults[0].email], (error, result) => {
+        if(error) {
+          console.error('DB error:', err);
+          return res.status(500).json({ message: 'Server error during sys_ID retrieval.' });
+        }
+
+        //return permissions and id
+        id = result[0].sys_ID;
+        console.log(id);
+        return res.json({
+          status: 'true',
+          permissions,
+          id,
+          info: 'http://localhost:3000/login.html'
+      });
+      });
+    }
+
+    //see if user is a student
+    if (permissions==0) {
+      const query = 'SELECT sys_ID FROM students WHERE email = ?';
+      db.query(query, [authResults[0].email], (error, result) => { 
+        if(error) {
+          console.error('DB error:', err);
+          return res.status(500).json({ message: 'Server error during permissions retrieval.' });
+        }
+        //return permissions and id
+        id = result[0].sys_ID;
+        return res.json({
+          status: 'true',
+          permissions,
+          id,
+          info: 'http://localhost:3000/login.html'});
+      });
+    }
+  
+    });
+}
+});
 
 /////////// login page  /////////////
 
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
+
   // Step 1: Check authentication
-  const authQuery = 'SELECT * FROM authentication WHERE email = ? AND password = ?';
-  authdb.query(authQuery, [email, password], (err, authResults) => {
+  const authQuery = 'SELECT password FROM authentication WHERE email = ?';
+  authdb.query(authQuery, [email], (err, authResults) => {
     if (err) {
       console.error('Auth error:', err);
       return res.status(500).json({ message: 'Server error during login.' });
@@ -238,6 +372,15 @@ app.post('/login', (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
+    let hPassword = authResults[0].password;
+    checkPassword(password, hPassword).then((match) => {
+      if(!match) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+      }
+    
+
+
+    if(match) {
     // Step 2: Get sys_ID from users table
     const userQuery = 'SELECT sys_ID FROM users WHERE email = ?';
     db.query(userQuery, [email], (err, userResults) => {
@@ -262,7 +405,8 @@ app.post('/login', (req, res) => {
 
         if (studentResults.length > 0) {
           //create session token
-          let sess_token = Math.random(1000000,999999);
+          let sess_token = crypto.randomBytes(16).toString('base64');
+
           //create session
           db.query('INSERT INTO sessions (email, sess_token, permissions) VALUES (?,?,?);', [email, sess_token, 0], (err, authResult) => {
             if (err) {
@@ -272,7 +416,7 @@ app.post('/login', (req, res) => {
           }
           });
 
-          res.cookie("session", sess_token);
+          res.cookie("session", sess_token, {expire: 5000000000 + Date.now()});
 
           return res.json({
             message: 'Login successful as student',
@@ -292,7 +436,7 @@ app.post('/login', (req, res) => {
 
           if (profResults.length > 0) {
             //create session token
-          let sess_token = Math.random(1000000,999999);
+          let sess_token = crypto.randomBytes(4).toString('hex');
           //create session
           db.query('INSERT INTO sessions (email, sess_token, permissions) VALUES (?,?,?);', [email, sess_token, 1], (err, authResult) => {
             if (err) {
@@ -302,7 +446,7 @@ app.post('/login', (req, res) => {
           }
           });
 
-          res.cookie("session", sess_token);
+          res.cookie("session", sess_token, {expire: 5000000000 + Date.now()});
 
 
             return res.json({
@@ -317,6 +461,8 @@ app.post('/login', (req, res) => {
           return res.status(403).json({ message: 'User has no associated role.' });
         });
       });
+    });
+  }
     });
   });
 });
@@ -356,7 +502,9 @@ const updateQuery = `
         reason: reason
       });
     }
-
+    const sess_token = req.cookies['session'];
+    table = 'professors';
+    updateInfo(table, sys_ID, sess_token,);
 
     return res.json({ message: 'Faculty information updated successfully' });
   });
@@ -396,6 +544,9 @@ app.put('/update-student-info/:sys_ID', (req, res) => {
         reason
       });
     }
+    const sess_token = req.cookies['session'];
+    let table = 'students';
+    updateInfo(table, sys_ID, sess_token);
 
     return res.json({ message: 'Student information updated successfully' });
   });
@@ -411,7 +562,7 @@ app.put('/update-student-info/:sys_ID', (req, res) => {
 app.put('/update-student/:blugold_ID', (req, res) => {
   const { blugold_ID } = req.params;
   const { GPA, account_balance, total_credits } = req.body;
-
+  const sess_token = req.cookies['session'];
   // Server-side field validation
   if (GPA !== undefined && (isNaN(GPA) || GPA < 0 || GPA > 5)) {
     return res.status(400).json({ message: 'Update failed', reason: 'GPA is a wrong value' });
@@ -433,6 +584,20 @@ app.put('/update-student/:blugold_ID', (req, res) => {
       return res.status(500).json({ message: 'Failed to update student info', reason: 'Database error' });
     }
 
+
+  const SYSquery = `SELECT sys_ID FROM students WHERE blugold_ID = ?;`
+
+  db.query(SYSquery, [blugold_ID], (err, results) => {
+    if (err) {
+          console.error('Update error:', err);
+        }
+    let table = 'students';
+    const sys_ID = results[0].sys_ID;
+    updateInfo(table, sys_ID, sess_token);
+  })
+    
+    
+
     // Update bank table
     const updateBank = `
       UPDATE bank 
@@ -446,7 +611,16 @@ app.put('/update-student/:blugold_ID', (req, res) => {
         return res.status(500).json({ message: 'Failed to update account_balance', reason: 'Database error' });
       }
 
-      res.json({ message: 'Student updated successfully' });
+    db.query(SYSquery, [blugold_ID], (err, results) => {
+      if (err) {
+            console.error('Update error:', err);
+          }
+      let table = 'bank';
+      const sys_ID = results[0].sys_ID;
+      updateInfo(table, sys_ID, sess_token);
+    })
+    
+    res.json({ message: 'Student updated successfully' });
     });
   });
 });
@@ -480,7 +654,57 @@ app.get('/student-by-sysid/:sys_ID', (req, res) => {
 });
 
 
+//////logout////
+app.get(`/logout`, (req,res) => {
+  const sess = req.cookies['session'];
+  res.clearCookie("session");
+  const query = `
+    DELETE FROM sessions
+    WHERE sess_token = ?
+  `;
 
+  db.query(query, [sess], (err,results) => {
+    if (err) {
+      console.error('Failed to log out', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    res.json('http://localhost:3000/login.html');
+    
+  })
+  
+})
+
+
+
+//returns id if logged in
+app.get(`/get_id`, (req,res) => {
+  const sess = req.cookies['session'];
+
+
+    const emailQuery = 'SELECT email from sessions where sess_token = ?'
+
+    db.query(emailQuery, [sess], (err, emailResults) => {
+      if (err) {
+        console.error('User lookup error:', err);
+        return res.status(500).json({ message: 'Server error during user lookup.' });
+      }
+
+        const email = emailResults[0].email;
+
+        const idQuery = 'SELECT sys_ID FROM users WHERE email = ?';
+        db.query(idQuery, [email], (err, userResults) => {
+        if (err) {
+          console.error('User lookup error:', err);
+          return res.status(500).json({ message: 'Server error during user lookup.' });
+        }
+
+        const sys_ID = userResults[0].sys_ID;
+        res.json(sys_ID);
+      })
+
+  })
+
+})
 
 
 

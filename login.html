@@ -6,21 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./styles/global.css">
     <link rel="stylesheet" href="./styles/login.css">
-    <!--<script src="./scripts/login.js" type="module"></script>--> 
 </head>
 <body>
     <header>
         <div class="logo-container"><img src="./images/white_uwec_logo.png" alt="uwec logo"></div>
-      <!--Quick temp links, will be deleted-->
-      <!--
-      <div class="temp">
-        <a href="login.html">Log in screen</a>
-        <a href="student.html">Student view</a>
-        <a href="faculty.html" >Faculty view</a>
-        <a href="editStudent.html">EDIT Student view</a>
-        <a href="admin.html">Admin</a>
-       </div>
-       -->
     </header>
     
     <div class="custom-shape-divider-top-1760377864">
@@ -33,54 +22,68 @@
         <noscript>Please enable scripts in your browser.</noscript>
         <div class="img-container"><img src="./images/symbol_logo.png" alt="uwec logo symbol"></div>
         <h1>Sign In</h1>
+        
         <form>
             <label for="email">Email:</label>
             <input type="text" id="email">
+
             <label for="password">Password:</label>
             <input type="password" id="password">
-            <span id = "passwordError" style="color:red"> </span>
-            <!--<label for="loginbool">Stay Logged In:</label>-->
-            <!--<input type="checkbox" id="loginbool">-->
+
+            <span id="passwordError" style="color:red"></span>
+
+            <!-- Google reCAPTCHA -->
+            <div class="g-recaptcha"
+                data-sitekey="6LeTdBQsAAAAAMoWMPkoOrOwueH1yITqdDEDi2az">
+            </div>
+
             <button type="submit" id="loginBtn">Log In</button>
-            <!--<p>Don't have an account?</p>
-            <a href="./signup.html">Sign Up</a>-->
         </form>
     </main>
-</body>
-<script>
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script>
     document.querySelector('form').addEventListener('submit', async function (e) {
-    e.preventDefault();
+        e.preventDefault();
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-    try {
-            const response = await fetch('/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            alert(result.message);
-            
-            localStorage.setItem('user_email', result.email);
-            localStorage.setItem('user_sys_ID', result.sys_ID);
-            window.location.href = result.redirectTo;
-
-
-        } else {
-            document.getElementById('passwordError').textContent = result.message;
+        const recaptchaResponse = grecaptcha.getResponse();
+        if (!recaptchaResponse) {
+            document.getElementById('passwordError').textContent = "Please complete the reCAPTCHA.";
+            return;
         }
-    } catch (err) {
-        console.error('Login failed:', err);
-        document.getElementById('passwordError').textContent = 'Failed to connect to server.';
-    }
+
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    recaptcha: recaptchaResponse
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(result.message);
+                window.location.href = result.redirectTo;
+            } else {
+                document.getElementById('passwordError').textContent = result.message;
+            }
+        } catch (err) {
+            console.error('Login failed:', err);
+            document.getElementById('passwordError').textContent = 'Failed to connect to server.';
+        }
     });
-
-</script>
-
-
+    </script>
+</body>
 </html>
+
+
+
+
+

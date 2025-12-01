@@ -71,4 +71,13 @@ Promblems need to fix.
 - need to update student view. 
 - Time stamps need to be added.
 
-    
+
+PUSH Nov 24th:
+UPdates to code were made, make sure to run:
+npm install bcrypt      
+npm install cookie-parser
+npm install crypto
+npm install axios
+npm install body parser
+
+And to delete and create the new database, the inserted password needed to be changed for faculty and student
