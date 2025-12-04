@@ -13,7 +13,8 @@ USE compsec_project;
 	CREATE TABLE sessions (
 		sess_token varchar(255) PRIMARY KEY NOT NULL,
 		permissions INT NOT NULL,
-		email varchar(255) NOT NULL
+		email varchar(255) NOT NULL,
+		valid bit NOT NULL
 	);
 
 	CREATE TABLE students (

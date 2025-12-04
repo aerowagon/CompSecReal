@@ -127,6 +127,18 @@
   </section>
 
   <script>
+
+        window.addEventListener("pageshow", (event) => {
+  const historyTraversal =
+    event.persisted ||
+    (typeof window.performance != "undefined" &&
+      window.performance.navigation.type === 2);
+
+  if (historyTraversal) {
+    window.location.reload();
+  }
+})
+
     async function checkLogin() {
       let results = null;
       try {
@@ -141,14 +153,12 @@
       }
 
       else {
-        return false;
+        window.location.href = 'http://localhost:3000/login.html';
       }
 
   }
+  
 
-  if (!checkLogin()) {
-    window.location.href = 'http://localhost:3000/login.html';
-  }
 
   async function getID() {
             let sys_ID = null;

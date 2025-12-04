@@ -64,13 +64,22 @@ async function updateInfo(table, sys_ID, sess_token) {
 async function hashPassword(password) {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log(hashedPassword);
     return hashedPassword;
 }
 
 async function checkPassword(password, hashedPassword) {
     const match = await bcrypt.compare(password, hashedPassword);
-    console.log(match ? 'Passwords match' : 'Passwords do not match');
+    return match;
+}
+
+async function hashUsername(username) {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(username, saltRounds);
+    return hashedPassword;
+}
+
+async function checkUsername(username, hashedUsername) {
+    const match = await bcrypt.compare(username, hashedUsername);
     return match;
 }
 
@@ -290,7 +299,7 @@ app.get('/session', (req, res) => {
     let permissions = null;
 
     //check for session token in database
-    const query = 'SELECT permissions, email FROM sessions WHERE sess_token = ?';
+    const query = 'SELECT permissions, email FROM sessions WHERE sess_token = ? AND valid = 1;';
     db.query(query, [sess_token], (err, authResults) => {
       
 
@@ -408,7 +417,7 @@ app.post('/login', (req, res) => {
           let sess_token = crypto.randomBytes(16).toString('base64');
 
           //create session
-          db.query('INSERT INTO sessions (email, sess_token, permissions) VALUES (?,?,?);', [email, sess_token, 0], (err, authResult) => {
+          db.query('INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);', [email, sess_token, 0], (err, authResult) => {
             if (err) {
             console.error('Session error:', err);
           } else {
@@ -438,7 +447,7 @@ app.post('/login', (req, res) => {
             //create session token
           let sess_token = crypto.randomBytes(4).toString('hex');
           //create session
-          db.query('INSERT INTO sessions (email, sess_token, permissions) VALUES (?,?,?);', [email, sess_token, 1], (err, authResult) => {
+          db.query('INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);', [email, sess_token, 1], (err, authResult) => {
             if (err) {
             console.error('Session error:', err);
           } else {
@@ -659,7 +668,8 @@ app.get(`/logout`, (req,res) => {
   const sess = req.cookies['session'];
   res.clearCookie("session");
   const query = `
-    DELETE FROM sessions
+    UPDATE sessions
+    SET valid = 0
     WHERE sess_token = ?
   `;
 
@@ -681,7 +691,7 @@ app.get(`/get_id`, (req,res) => {
   const sess = req.cookies['session'];
 
 
-    const emailQuery = 'SELECT email from sessions where sess_token = ?'
+    const emailQuery = 'SELECT email from sessions where sess_token = ? AND valid = 1;'
 
     db.query(emailQuery, [sess], (err, emailResults) => {
       if (err) {

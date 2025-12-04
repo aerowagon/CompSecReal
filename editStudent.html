@@ -80,32 +80,51 @@
 
     <button type="submit">Save Changes</button>
     <div id="messageBox" style="margin-top:10px;font-weight:bold;"></div>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
+
   </form>
 
   <script>
+
+    window.addEventListener("pageshow", (event) => {
+  const historyTraversal =
+    event.persisted ||
+    (typeof window.performance != "undefined" &&
+      window.performance.navigation.type === 2);
+
+  if (historyTraversal) {
+    window.location.reload();
+  }
+});
     
     const urlParams = new URLSearchParams(window.location.search);
     const blugold_ID = urlParams.get('blugold_ID');
 
     async function checkLogin() {
       let results = null;
+      console.log('checking');
       try {
           const res = await fetch(`/session`);
           results = await res.json();
       } catch (err) {
           console.error('Failed to get session:', err);
       }
+      console.log(results.status);
 
       if (results.status == 'true' && results.permissions == 1) {
         console.log('verified');
-        return true;
+        fetchStudent();
       }
 
       else {
-        return false;
+        window.location.href = 'http://localhost:3000/login.html';
       }
 
   }
+  checkLogin();
 
     async function fetchStudent() {
       const res = await fetch(`/student/${blugold_ID}`);
@@ -167,13 +186,6 @@
         messageBox.style.color = 'red';
       }
     });
-
-    if (checkLogin()) {
-      fetchStudent();
-    }
-    else {
-      window.location.href = 'http://localhost:3000/login.html';
-    }
     
   </script>
   </section>

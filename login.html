@@ -43,6 +43,10 @@
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
+
+    window.addEventListener('popstate', function(event) {location.reload(); });
+
+        
     document.querySelector('form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
