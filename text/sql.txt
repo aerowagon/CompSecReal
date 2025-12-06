@@ -2,6 +2,7 @@
 
 -- first database
 
+DROP DATABASE IF EXISTS compsec_project;
 CREATE DATABASE compsec_project;
 USE compsec_project;
 
@@ -18,7 +19,7 @@ USE compsec_project;
 	);
 
 	CREATE TABLE students (
-		sys_ID INT,
+		sys_ID INT, 
 		blugold_ID INT AUTO_INCREMENT PRIMARY KEY,
 		email VARCHAR(255) NOT NULL,
 		f_name VARCHAR(255) NOT NULL,
@@ -67,6 +68,7 @@ USE compsec_project;
 
 
 -- second database
+DROP DATABASE IF EXISTS compsec_project_auth;
 CREATE DATABASE compsec_project_auth;
 USE compsec_project_auth;
 
@@ -158,4 +160,250 @@ INSERT INTO authentication (email, password)
 VALUES
 ('faculty1@uwec.edu', '$2b$10$8eA6chDoxL0I6GL7/Dz94ej1KPiSsOvBYsld7zYxwPgQ0flIMkpF.'),
 ('fakestudent1@uwec.edu', '$2b$10$H7KM61rm4UxsD0ZbBerjBuzqS3Ltc4GMFJMT86kA7/IlOpZTgq.e.');
+
+
+-- make audit table
+USE compsec_project;
+
+-- Create an audit table
+CREATE TABLE IF NOT EXISTS audit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sys_ID INT,
+    table_name VARCHAR(255),
+    action_type ENUM('INSERT','UPDATE','DELETE'),
+    changed_by_email VARCHAR(255),
+    changed_by_token VARCHAR(255),
+    column_name VARCHAR(255),
+    old_value TEXT,
+    new_value TEXT,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
+);
+
+-- Trigger for students table
+DELIMITER //
+CREATE TRIGGER students_update
+AFTER UPDATE ON students
+FOR EACH ROW
+BEGIN
+    -- email change
+    IF OLD.email <> NEW.email THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'email', OLD.email, NEW.email);
+    END IF;
+
+    -- first name change
+    IF OLD.f_name <> NEW.f_name THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'f_name', OLD.f_name, NEW.f_name);
+    END IF;
+
+    -- last name change
+    IF OLD.l_name <> NEW.l_name THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'l_name', OLD.l_name, NEW.l_name);
+    END IF;
+
+    -- GPA change
+    IF OLD.GPA <> NEW.GPA THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'GPA', OLD.GPA, NEW.GPA);
+    END IF;
+
+    -- address change
+    IF OLD.address <> NEW.address THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'address', OLD.address, NEW.address);
+    END IF;
+
+    --  city chang 
+    IF OLD.city <> NEW.city THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'city', OLD.city, NEW.city);
+    END IF;
+    
+    -- add_city change 
+    IF OLD.add_city <> NEW.add_city THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'state', OLD.add_city, NEW.add_city);
+    END IF;
+    
+    -- zip_code change 
+    IF OLD.zip_code <> NEW.zip_code THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'zip_code', OLD.zip_code, NEW.zip_code);
+    END IF;
+    
+    -- total_credits
+    IF OLD.total_credits <> NEW.total_credits THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('students', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'total_credits', OLD.total_credits, NEW.total_credits);
+    END IF;
+    
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER professors_update
+AFTER UPDATE ON professors
+FOR EACH ROW
+BEGIN
+    -- email change
+    IF OLD.email <> NEW.email THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'email', OLD.email, NEW.email);
+    END IF;
+
+    -- first name change
+    IF OLD.f_name <> NEW.f_name THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'f_name', OLD.f_name, NEW.f_name);
+    END IF;
+
+    -- last name change
+    IF OLD.l_name <> NEW.l_name THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'l_name', OLD.l_name, NEW.l_name);
+    END IF;
+
+    -- GPA change
+    IF OLD.GPA <> NEW.GPA THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'GPA', OLD.GPA, NEW.GPA);
+    END IF;
+
+    -- address change
+    IF OLD.address <> NEW.address THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'address', OLD.address, NEW.address);
+    END IF;
+
+    -- city change
+    IF OLD.city <> NEW.city THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'city', OLD.city, NEW.city);
+    END IF;
+
+    -- add_city change
+    IF OLD.add_city <> NEW.add_city THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'add_city', OLD.add_city, NEW.add_city);
+    END IF;
+
+    -- zip_code change
+    IF OLD.zip_code <> NEW.zip_code THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'zip_code', OLD.zip_code, NEW.zip_code);
+    END IF;
+
+    -- phone change
+    IF OLD.phone <> NEW.phone THEN
+        INSERT INTO audit_log 
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES 
+        ('professors', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'phone', OLD.phone, NEW.phone);
+    END IF;
+
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER bank_update
+AFTER UPDATE ON bank
+FOR EACH ROW
+BEGIN
+    -- account_balance change
+    IF OLD.account_balance <> NEW.account_balance THEN
+        INSERT INTO audit_log
+        (table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+        VALUES
+        ('bank', 'UPDATE', @session_email, @session_user, NEW.sys_ID, 'account_balance', OLD.account_balance, NEW.account_balance);
+    END IF;
+END;
+//
+DELIMITER ;
+
+
+
+CREATE TRIGGER students_insert
+AFTER INSERT ON students
+FOR EACH ROW
+INSERT INTO audit_log (table_name, action_type, changed_by, sys_ID, new_value)
+VALUES ('students', 'INSERT', NEW.sys_ID, NEW.blugold_ID, 'new row inserted');
+
+CREATE TRIGGER students_delete
+AFTER DELETE ON students
+FOR EACH ROW
+INSERT INTO audit_log (table_name, action_type, changed_by, sys_ID, old_value)
+VALUES ('students', 'DELETE', OLD.blugold_ID, 'row deleted');
+
+DELIMITER //
+CREATE TRIGGER professors_insert
+AFTER INSERT ON professors
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_log 
+    (table_name, action_type, changed_by_email, changed_by_token, sys_ID, new_value)
+    VALUES 
+    ('professors', 'INSERT', @session_email, @session_user, NEW.sys_ID, 'new row inserted');
+END;
+//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER professors_delete
+AFTER DELETE ON professors
+FOR EACH ROW
+BEGIN
+    INSERT INTO audit_log 
+    (table_name, action_type, changed_by_email, changed_by_token, sys_ID, old_value)
+    VALUES 
+    ('professors', 'DELETE', @session_email, @session_user, OLD.sys_ID, 'row deleted');
+END;
+//
+DELIMITER ;
+
+
+
+
+
+
 

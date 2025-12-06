@@ -480,42 +480,35 @@ app.post('/login', (req, res) => {
 
 app.put('/update-faculty/:sys_ID', (req, res) => {
   const { sys_ID } = req.params;
-  const { email, address, city, add_city, zip_code, /*phone*/ } = req.body;
+  const { email, address, city, add_city, zip_code } = req.body;
+  const sess_token = req.cookies['session'];
 
-const updateQuery = `
-  UPDATE professors
-  SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?
-  WHERE sys_ID = ?
-`;
+  // Set session variable for MySQL triggers
+  // Get the email of the current session
+db.query('SELECT email FROM sessions WHERE sess_token = ? AND valid = 1', [sess_token], (err, results) => {
+    if (err || results.length === 0) return res.status(500).json({ message: 'Session error' });
+    const email = results[0].email;
 
+    // Set session variables for triggers
+    db.query('SET @session_user = ?, @session_email = ?', [sess_token, email], (err) => {
+      if (err) return res.status(500).json({ message: 'Failed to set session variables' });
 
-  db.query(updateQuery, [email, address, city, add_city, zip_code, /*phone,*/ sys_ID], (err, result) => {
-    if (err) {
-      console.error('Failed to update faculty info:', err);
+      
+      const updateQuery = `
+        UPDATE professors
+        SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?
+        WHERE sys_ID = ?
+      `;
 
-      // Give user-friendly reason
-      let reason = 'Unknown error occurred while saving.';
+      db.query(updateQuery, [email, address, city, add_city, zip_code, sys_ID], (err) => {
+        if (err) {
+          console.error('Failed to update faculty info:', err);
+          return res.status(500).json({ message: 'Failed to update faculty info' });
+        }
 
-      if (err.code === 'ER_DUP_ENTRY') {
-        reason = 'This email is already in use by another faculty member.';
-      } else if (err.code === 'ER_BAD_NULL_ERROR') {
-        reason = 'A required field is missing.';
-      } else if (err.code === 'ER_DATA_TOO_LONG') {
-        reason = 'One of the fields is too long for the database column.';
-      } else if (err.code === 'ER_CHECK_CONSTRAINT_VIOLATED' || err.errno === 3819) {
-        reason = 'ZIP code must be 5 digits.';
-      }
-
-      return res.status(500).json({
-        message: 'Failed to update faculty info.',
-        reason: reason
+        res.json({ message: 'Faculty information updated successfully' });
       });
-    }
-    const sess_token = req.cookies['session'];
-    table = 'professors';
-    updateInfo(table, sys_ID, sess_token,);
-
-    return res.json({ message: 'Faculty information updated successfully' });
+    });
   });
 });
 
@@ -524,44 +517,46 @@ const updateQuery = `
 
 app.put('/update-student-info/:sys_ID', (req, res) => {
   const { sys_ID } = req.params;
-  const { email, address, city, add_city, zip_code /*, phone*/ } = req.body;
+  const { email, address, city, add_city, zip_code } = req.body;
+  const sess_token = req.cookies['session'];
 
-  const updateQuery = `
-    UPDATE students
-    SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?
-    WHERE sys_ID = ?
-  `;
-
-  db.query(updateQuery, [email, address, city, add_city, zip_code, sys_ID], (err, result) => {
-    if (err) {
-      console.error('Failed to update student info:', err);
-
-      let reason = 'Unknown error occurred while saving.';
-
-      if (err.code === 'ER_DUP_ENTRY') {
-        reason = 'This email is already in use by another student.';
-      } else if (err.code === 'ER_BAD_NULL_ERROR') {
-        reason = 'A required field is missing.';
-      } else if (err.code === 'ER_DATA_TOO_LONG') {
-        reason = 'One of the fields is too long for the database column.';
-      } else if (err.code === 'ER_TRUNCATED_WRONG_VALUE' || err.errno === 3819) {
-        reason = 'ZIP code must be 5 digits.';
-      }
-
-      return res.status(500).json({
-        message: 'Failed to update student info.',
-        reason
-      });
+  // Get email of the session
+  db.query('SELECT email FROM sessions WHERE sess_token = ? AND valid = 1', [sess_token], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(500).json({ message: 'Session invalid or DB error' });
     }
-    const sess_token = req.cookies['session'];
-    let table = 'students';
-    updateInfo(table, sys_ID, sess_token);
 
-    return res.json({ message: 'Student information updated successfully' });
+    const session_email = results[0].email;
+
+    // Set session variables for triggers
+   // Get the email of the current session
+  db.query('SELECT email FROM sessions WHERE sess_token = ? AND valid = 1', [sess_token], (err, results) => {
+    if (err || results.length === 0) return res.status(500).json({ message: 'Session error' });
+    const email = results[0].email;
+
+    // Set session variables for triggers
+    db.query('SET @session_user = ?, @session_email = ?', [sess_token, email], (err) => {
+      if (err) return res.status(500).json({ message: 'Failed to set session variables' });
+
+        
+        const updateQuery = `
+          UPDATE students
+          SET email = ?, address = ?, city = ?, add_city = ?, zip_code = ?
+          WHERE sys_ID = ?
+        `;
+
+        db.query(updateQuery, [email, address, city, add_city, zip_code, sys_ID], (err) => {
+          if (err) {
+            console.error('Failed to update student info:', err);
+            return res.status(500).json({ message: 'Failed to update student info' });
+          }
+
+          res.json({ message: 'Student information updated successfully' });
+        });
+      });
+    });
   });
 });
-
-
 
 
 
@@ -572,67 +567,61 @@ app.put('/update-student/:blugold_ID', (req, res) => {
   const { blugold_ID } = req.params;
   const { GPA, account_balance, total_credits } = req.body;
   const sess_token = req.cookies['session'];
-  // Server-side field validation
+
+  // Validate input
   if (GPA !== undefined && (isNaN(GPA) || GPA < 0 || GPA > 5)) {
-    return res.status(400).json({ message: 'Update failed', reason: 'GPA is a wrong value' });
+    return res.status(400).json({ message: 'Update failed', reason: 'Invalid GPA' });
   }
-
   if (total_credits !== undefined && (isNaN(total_credits) || total_credits < 0)) {
-    return res.status(400).json({ message: 'Update failed', reason: 'Total credits is a wrong value' });
+    return res.status(400).json({ message: 'Update failed', reason: 'Invalid total credits' });
   }
-
   if (account_balance !== undefined && isNaN(account_balance)) {
-    return res.status(400).json({ message: 'Update failed', reason: 'Account balance is a wrong value' });
+    return res.status(400).json({ message: 'Update failed', reason: 'Invalid account balance' });
   }
 
-  // Update students table
-  const updateStudent = 'UPDATE students SET GPA = ?, total_credits = ? WHERE blugold_ID = ?';
-  db.query(updateStudent, [GPA, total_credits, blugold_ID], (err) => {
-    if (err) {
-      console.error('Failed to update student info:', err);
-      return res.status(500).json({ message: 'Failed to update student info', reason: 'Database error' });
-    }
+  // Set session user for triggers
+  // Get the email of the current session
+  db.query('SELECT email FROM sessions WHERE sess_token = ? AND valid = 1', [sess_token], (err, results) => {
+    if (err || results.length === 0) return res.status(500).json({ message: 'Session error' });
+    const email = results[0].email;
 
+    // Set session variables for triggers
+    db.query('SET @session_user = ?, @session_email = ?', [sess_token, email], (err) => {
+          if (err) return res.status(500).json({ message: 'Failed to set session variables' });
 
-  const SYSquery = `SELECT sys_ID FROM students WHERE blugold_ID = ?;`
-
-  db.query(SYSquery, [blugold_ID], (err, results) => {
-    if (err) {
-          console.error('Update error:', err);
+      
+      // Update students table
+      const updateStudent = `
+        UPDATE students
+        SET GPA = ?, total_credits = ?
+        WHERE blugold_ID = ?
+      `;
+      db.query(updateStudent, [GPA, total_credits, blugold_ID], (err) => {
+        if (err) {
+          console.error('Failed to update student info:', err);
+          return res.status(500).json({ message: 'Failed to update student info' });
         }
-    let table = 'students';
-    const sys_ID = results[0].sys_ID;
-    updateInfo(table, sys_ID, sess_token);
-  })
-    
-    
 
-    // Update bank table
-    const updateBank = `
-      UPDATE bank 
-      JOIN students ON bank.sys_ID = students.sys_ID 
-      SET account_balance = ? 
-      WHERE students.blugold_ID = ?
-    `;
-    db.query(updateBank, [account_balance, blugold_ID], (err) => {
-      if (err) {
-        console.error('Failed to update account_balance:', err);
-        return res.status(500).json({ message: 'Failed to update account_balance', reason: 'Database error' });
-      }
-
-    db.query(SYSquery, [blugold_ID], (err, results) => {
-      if (err) {
-            console.error('Update error:', err);
+        // Update bank table
+        const updateBank = `
+          UPDATE bank
+          JOIN students ON bank.sys_ID = students.sys_ID
+          SET account_balance = ?
+          WHERE students.blugold_ID = ?
+        `;
+        db.query(updateBank, [account_balance, blugold_ID], (err) => {
+          if (err) {
+            console.error('Failed to update account_balance:', err);
+            return res.status(500).json({ message: 'Failed to update account_balance' });
           }
-      let table = 'bank';
-      const sys_ID = results[0].sys_ID;
-      updateInfo(table, sys_ID, sess_token);
-    })
-    
-    res.json({ message: 'Student updated successfully' });
+
+          res.json({ message: 'Student updated successfully' });
+        });
+      });
     });
   });
 });
+
 
 
 

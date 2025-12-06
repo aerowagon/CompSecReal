@@ -81,3 +81,7 @@ npm install axios
 npm install body parser
 
 And to delete and create the new database, the inserted password needed to be changed for faculty and student
+
+6 dec james
+made audit log for changes to student, professor and bank.
+updated server.js to match
