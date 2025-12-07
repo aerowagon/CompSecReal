@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Logs</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <h1>System Logs</h1>
+
+  <h2>Audit Log</h2>
+  <table id="audit-log-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Sys_ID</th>
+        <th>Table</th>
+        <th>Action</th>
+        <th>Changed By Email</th>
+        <th>Changed By Token</th>
+        <th>Column</th>
+        <th>Old Value</th>
+        <th>New Value</th>
+        <th>Changed At</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Login Log</h2>
+  <table id="login-log-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Sys_ID</th>
+        <th>Email</th>
+        <th>Session Token</th>
+        <th>Login Time</th>
+        <th>Logout Time</th>
+        <th>Logout Reason</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function fetchAndDisplay(url, tableId) {
+      const response = await fetch(url);
+      const data = await response.json();
+      const tbody = document.querySelector(`#${tableId} tbody`);
+      tbody.innerHTML = ''; // clear existing rows
+
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        for (let key in row) {
+          const td = document.createElement('td');
+          td.textContent = row[key] !== null ? row[key] : '';
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Fetch both logs
+    fetchAndDisplay('/api/audit-log', 'audit-log-table');
+    fetchAndDisplay('/api/login-log', 'login-log-table');
+  </script>
+</body>
+</html>

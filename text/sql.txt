@@ -14,7 +14,10 @@ USE compsec_project;
 	CREATE TABLE sessions (
 		sess_token varchar(255) PRIMARY KEY NOT NULL,
 		permissions INT NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		email varchar(255) NOT NULL,
+        
 		valid bit NOT NULL
 	);
 
@@ -65,6 +68,17 @@ USE compsec_project;
 		updated_table varchar(255) NOT NULL,
 		sys_ID_edited INT NOT NULL
 	);
+    
+    CREATE TABLE login_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sys_ID INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    session_token VARCHAR(255) NOT NULL,
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    logout_time TIMESTAMP NULL,
+    logout_reason ENUM('button','timeout','browser_closed','power_loss') NULL,
+    FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
+);
 
 
 -- second database
@@ -77,6 +91,11 @@ CREATE TABLE authentication (
 	email VARCHAR(225) NOT NULL,
 	password VARCHAR(255) NOT NULL
 );
+
+
+
+
+
 
 
 -- switch back to main project database
@@ -362,13 +381,18 @@ END;
 DELIMITER ;
 
 
-
+DELIMITER //
 CREATE TRIGGER students_insert
 AFTER INSERT ON students
 FOR EACH ROW
-INSERT INTO audit_log (table_name, action_type, changed_by, sys_ID, new_value)
-VALUES ('students', 'INSERT', NEW.sys_ID, NEW.blugold_ID, 'new row inserted');
+BEGIN
+    INSERT INTO audit_log
+		( sys_ID, table_name, action_type, changed_by_email, changed_by_token, column_name, old_value, new_value)
+    VALUES 
+		(NEW.sys_ID, 'students', 'INSERT', @session_email, @session_user, NULL, NULL, 'new row inserted' );
+END //
 
+DELIMITER //
 CREATE TRIGGER students_delete
 AFTER DELETE ON students
 FOR EACH ROW
@@ -400,10 +424,3 @@ BEGIN
 END;
 //
 DELIMITER ;
-
-
-
-
-
-
-

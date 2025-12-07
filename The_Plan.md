@@ -85,3 +85,8 @@ And to delete and create the new database, the inserted password needed to be ch
 6 dec james
 made audit log for changes to student, professor and bank.
 updated server.js to match
+---
+added login_log table 
+added "heartbeat" and session cleanup(5min)
+added logs.html and button to access
+

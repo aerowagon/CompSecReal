@@ -18,6 +18,20 @@ app.use(express.static(path.join(__dirname)));
 //use cookie parser to parse cookies yay
 app.use(cookieParser());
 
+// UPDATE LAST_SEEN ON EVERY REQUEST (heartbeat)
+app.use((req, res, next) => {
+  const sess = req.cookies['session'];
+  if (sess) {
+    db.query(
+      "UPDATE sessions SET last_seen = NOW() WHERE sess_token = ? AND valid = 1",
+      [sess]
+    );
+  }
+  next();
+});
+
+
+
 // Connect to MySQL
 const db = mysql.createConnection({
   host: 'localhost',
@@ -420,10 +434,20 @@ app.post('/login', (req, res) => {
           db.query('INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);', [email, sess_token, 0], (err, authResult) => {
             if (err) {
             console.error('Session error:', err);
-          } else {
-            console.log('Session created:', authResult);
-          }
+            } else {
+              console.log('Session created:', authResult);
+            }
           });
+
+    
+
+          db.query(
+              'INSERT INTO login_log (sys_ID, email, session_token) VALUES (?, ?, ?)',
+              [sys_ID, email, sess_token],
+              (logErr) => {
+                  if (logErr) console.error("Failed to write login_log entry:", logErr);
+              }
+          );
 
           res.cookie("session", sess_token, {expire: 5000000000 + Date.now()});
 
@@ -444,19 +468,31 @@ app.post('/login', (req, res) => {
           }
 
           if (profResults.length > 0) {
-            //create session token
-          let sess_token = crypto.randomBytes(4).toString('hex');
-          //create session
-          db.query('INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);', [email, sess_token, 1], (err, authResult) => {
-            if (err) {
-            console.error('Session error:', err);
-          } else {
-            console.log('Session created:', authResult);
-          }
-          });
 
-          res.cookie("session", sess_token, {expire: 5000000000 + Date.now()});
+            let sess_token = crypto.randomBytes(4).toString('hex');
 
+            // Create session entry
+            db.query(
+              'INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);',
+              [email, sess_token, 1],
+              (err, authResult) => {
+                if (err) {
+                  console.error('Session error:', err);
+                } else {
+                  console.log('Session created:', authResult);
+                }
+              }
+            );
+
+            db.query(
+                'INSERT INTO login_log (sys_ID, email, session_token) VALUES (?, ?, ?)',
+                [sys_ID, email, sess_token],
+                (logErr) => {
+                    if (logErr) console.error("Failed to write login_log entry:", logErr);
+                }
+            );
+
+            res.cookie("session", sess_token, {expire: 5000000000 + Date.now()});
 
             return res.json({
               message: 'Login successful as faculty',
@@ -667,6 +703,17 @@ app.get(`/logout`, (req,res) => {
       console.error('Failed to log out', err);
       return res.status(500).json({ message: 'Database error' });
     }
+
+    db.query(
+      `UPDATE login_log
+      SET logout_time = NOW(), logout_reason = 'button'
+      WHERE session_token = ? AND logout_time IS NULL`,
+      [sess],
+      (err) => {
+        if (err) console.error("Failed to update login_log on logout:", err);
+      }
+    );
+
     res.json('http://localhost:3000/login.html');
     
   })
@@ -704,6 +751,66 @@ app.get(`/get_id`, (req,res) => {
   })
 
 })
+
+/*  auto-logout stale sessions ( 5 min) */
+
+setInterval(() => {
+  const TIMEOUT_MINUTES = 2; // adjust as needed
+
+  // find stale active sessions
+  db.query(
+    `SELECT sess_token FROM sessions
+     WHERE valid = 1
+     AND last_seen < (NOW() - INTERVAL ? MINUTE)`,
+    [TIMEOUT_MINUTES],
+    (err, rows) => {
+      if (err) return console.error("Cleanup error:", err);
+
+      rows.forEach(row => {
+        const token = row.sess_token;
+
+        // 1. Invalidate session
+        db.query("UPDATE sessions SET valid = 0 WHERE sess_token = ?", [token]);
+
+        // 2. Update login_log
+        db.query(
+          `UPDATE login_log
+           SET logout_time = NOW(),
+               logout_reason = 'browser_closed'
+           WHERE session_token = ?
+             AND logout_time IS NULL`,
+          [token]
+        );
+      });
+    }
+  );
+}, 5 * 60 * 1000);  // every 5 minutes
+
+/* logs.html */
+
+// Get all audit_log entries
+app.get('/api/audit-log', (req, res) => {
+  const query = 'SELECT * FROM audit_log ORDER BY changed_at DESC';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Failed to fetch audit_log:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    res.json(results);
+  });
+});
+
+// Get all login_log entries
+app.get('/api/login-log', (req, res) => {
+  const query = 'SELECT * FROM login_log ORDER BY login_time DESC';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Failed to fetch login_log:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+    res.json(results);
+  });
+});
 
 
 
