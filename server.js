@@ -5,6 +5,8 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 const port = 3000;
 
@@ -52,6 +54,17 @@ db.connect((err) => {
     console.error('Database connection failed:', err);
   } else {
     console.log('Connected to MySQL database.');
+  }
+});
+
+// ADD THIS EMAIL CONFIGURATION AFTER YOUR DATABASE CONNECTIONS
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com', // or your SMTP server
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER || 'your_email@uwec.edu',
+    pass: process.env.SMTP_PASS || 'your_app_password'
   }
 });
 
@@ -800,6 +813,205 @@ app.get('/api/login-log', (req, res) => {
     res.json(results);
   });
 });
+
+//verifies the captcha was correct
+async function verifyRecaptcha(token) {
+  try {
+    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+      params: {
+        secret: process.env.RECAPTCHA_SECRET_KEY || 'your_recaptcha_secret',
+        response: token
+      }
+    });
+    return response.data.success;
+  } catch (error) {
+    console.error('reCAPTCHA verification failed:', error);
+    return false;
+  }
+}
+
+// Password reset routes
+
+// Request password reset
+app.post('/request-password-reset', async (req, res) => {
+  const { email, recaptcha } = req.body;
+
+  if (!email || !recaptcha) {
+    return res.status(400).json({ message: 'Email and reCAPTCHA are required.' });
+  }
+
+  // Verify reCAPTCHA
+  const isRecaptchaValid = await verifyRecaptcha(recaptcha);
+  if (!isRecaptchaValid) {
+    return res.status(400).json({ message: 'reCAPTCHA verification failed.' });
+  }
+
+  // Check if user exists
+  authdb.query('SELECT email FROM authentication WHERE email = ?', [email], (err, users) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ message: 'An error occurred. Please try again later.' });
+    }
+
+    // Always return success message (security best practice)
+    if (users.length === 0) {
+      return res.status(200).json({ 
+        message: 'If an account exists with this email, a password reset link has been sent.' 
+      });
+    }
+
+    // Generate secure random token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    // Token expires in 1 hour
+    const expiresAt = new Date(Date.now() + 3600000);
+
+    // Store token in database
+    authdb.query(
+      'INSERT INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)',
+      [email, hashedToken, expiresAt],
+      (err) => {
+        if (err) {
+          console.error('Token storage error:', err);
+          return res.status(500).json({ message: 'An error occurred. Please try again later.' });
+        }
+
+        // Create reset URL
+        const resetUrl = `http://localhost:3000/reset-password.html?token=${resetToken}`;
+
+        // Send email
+        transporter.sendMail({
+          from: '"UWEC Password Reset" <noreply@uwec.edu>',
+          to: email,
+          subject: 'Password Reset Request',
+          html: `
+            <h2>Password Reset Request</h2>
+            <p>You requested a password reset. Click the link below to reset your password:</p>
+            <a href="${resetUrl}">${resetUrl}</a>
+            <p>This link will expire in 1 hour.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+          `
+        }, (err) => {
+          if (err) {
+            console.error('Email error:', err);
+            return res.status(500).json({ message: 'Failed to send email.' });
+          }
+
+          res.status(200).json({ 
+            message: 'If an account exists with this email, a password reset link has been sent.' 
+          });
+        });
+      }
+    );
+  });
+});
+
+// Verify reset token
+app.get('/verify-reset-token', (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ valid: false, message: 'Token is required.' });
+  }
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  authdb.query(
+    'SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW() AND used = FALSE',
+    [hashedToken],
+    (err, tokens) => {
+      if (err) {
+        console.error('Token verification error:', err);
+        return res.status(500).json({ valid: false, message: 'An error occurred.' });
+      }
+
+      if (tokens.length === 0) {
+        return res.status(400).json({ 
+          valid: false, 
+          message: 'Invalid or expired reset token.' 
+        });
+      }
+
+      res.status(200).json({ valid: true, email: tokens[0].email });
+    }
+  );
+});
+
+// Reset password with token
+app.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: 'Token and new password are required.' });
+  }
+
+  // Validate password strength
+  if (newPassword.length < 8) {
+    return res.status(400).json({ 
+      message: 'Password must be at least 8 characters long.' 
+    });
+  }
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  // Find valid token
+  authdb.query(
+    'SELECT * FROM password_reset_tokens WHERE token = ? AND expires_at > NOW() AND used = FALSE',
+    [hashedToken],
+    async (err, tokens) => {
+      if (err) {
+        console.error('Token lookup error:', err);
+        return res.status(500).json({ message: 'An error occurred.' });
+      }
+
+      if (tokens.length === 0) {
+        return res.status(400).json({ 
+          message: 'Invalid or expired reset token.' 
+        });
+      }
+
+      const { email } = tokens[0];
+
+      try {
+        // Hash new password
+        const hashedPassword = await hashPassword(newPassword);
+
+        // Update password
+        authdb.query(
+          'UPDATE authentication SET password = ? WHERE email = ?',
+          [hashedPassword, email],
+          (err) => {
+            if (err) {
+              console.error('Password update error:', err);
+              return res.status(500).json({ message: 'Failed to update password.' });
+            }
+
+            // Mark token as used
+            authdb.query(
+              'UPDATE password_reset_tokens SET used = TRUE WHERE token = ?',
+              [hashedToken],
+              (err) => {
+                if (err) {
+                  console.error('Token update error:', err);
+                }
+
+                res.status(200).json({ 
+                  message: 'Password successfully reset. You can now log in with your new password.',
+                  redirectTo: '/login.html'
+                });
+              }
+            );
+          }
+        );
+      } catch (error) {
+        console.error('Password hashing error:', error);
+        res.status(500).json({ message: 'An error occurred.' });
+      }
+    }
+  );
+});
+
 
 
 

@@ -31,7 +31,7 @@
             <input type="password" id="password">
 
             <span id="passwordError" style="color:red"></span>
-
+            
             <!-- Google reCAPTCHA -->
             <div class="g-recaptcha"
                 data-sitekey="6LeTdBQsAAAAAMoWMPkoOrOwueH1yITqdDEDi2az">
@@ -39,6 +39,7 @@
 
             <button type="submit" id="loginBtn">Log In</button>
         </form>
+        <button id="forgotBtn">Forgot Password?</button>
     </main>
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -82,6 +83,11 @@
             console.error('Login failed:', err);
             document.getElementById('passwordError').textContent = 'Failed to connect to server.';
         }
+    });
+
+    //go to reset page stuff
+    document.getElementById("forgotBtn").addEventListener("click", function() {
+    window.location.href = "reset.html";
     });
     </script>
 </body>
