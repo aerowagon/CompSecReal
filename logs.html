@@ -3,8 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Logs</title>
+  <link rel="stylesheet" href="./styles/global.css">
+  <link rel="stylesheet" href="./styles/dashboard.css">
   <style>
+    h1, h2{
+      color: gold;
+    }
     table {
+      background-color: wheat;
       border-collapse: collapse;
       width: 100%;
       margin-bottom: 40px;
@@ -64,14 +70,22 @@
     async function fetchAndDisplay(url, tableId) {
       const response = await fetch(url);
       const data = await response.json();
-      const tbody = document.querySelector(`#${tableId} tbody`);
-      tbody.innerHTML = ''; // clear existing rows
 
-      data.forEach(row => {
+      // Ensure newest → oldest
+      const sorted = data.sort((a, b) => {
+        const dateA = new Date(a.changed_at || a.login_time);
+        const dateB = new Date(b.changed_at || b.login_time);
+        return dateB - dateA; // DESC
+      });
+
+      const tbody = document.querySelector(`#${tableId} tbody`);
+      tbody.innerHTML = '';
+
+      sorted.forEach(row => {
         const tr = document.createElement('tr');
         for (let key in row) {
           const td = document.createElement('td');
-          td.textContent = row[key] !== null ? row[key] : '';
+          td.textContent = row[key] ?? '';
           tr.appendChild(td);
         }
         tbody.appendChild(tr);

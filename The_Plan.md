@@ -90,3 +90,8 @@ added login_log table
 added "heartbeat" and session cleanup(5min)
 added logs.html and button to access
 
+7 dec james
+login.html syle format
+sql for insert new user, reduce null
+--- have polymorphism going on with email ( created by email is becoming the new user email.)
+

@@ -153,18 +153,7 @@ app.post('/add-user', (req, res) => {
       let roleQuery = '';
       const commonParams = [sys_ID, email, f_name, l_name, address || '', city || '', add_city || '', zip_code || null];
 
-      /*if (role === 'student') {
-        roleQuery = 'INSERT INTO students (sys_ID, f_name, l_name, GPA, address, city, add_city, zip_code) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-        commonParams.splice(1, 0, blugold_ID); // insert blugold_ID after sys_ID
-      } else if (role === 'faculty') {
-        roleQuery = 'INSERT INTO professors (sys_ID, email, f_name, l_name, GPA, address, city, add_city, zip_code) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      } else {
-        return res.status(400).json({ message: 'Invalid role specified' });
-      }*/
-
-        /////I replaced the above commented out code with this://////
+      db.query("SET @session_user = ?, @session_email = ?", [sess_token, email])
 
     if (role === 'student') {
   // Students table doesn’t need blugold_ID manually — MySQL handles it
