@@ -44,3 +44,9 @@ To make your network certification "secure" follow these steps:
 6. This creates these two files (the ones you previously should have deleted): localhost.pem, and localhost-key.pem. Move these two files into the certs folder
 7. run nodes. sever.js and itll show you the https://localhost:3000/
 8. If you run this on your safari it should work now! :)
+
+Also I had to clear my google cache data so that it would work on my normal google chrome browser (it was secure for Safari and for google incagnito mode, however I had to do extra steps in order to make it secure for normal google chrome). 
+First, make sure that node server.js isnt running and then go to chrome://net-internals/#hsts. 
+Underneath "Delete domain security policies", type in "local host" and click delete. 
+After that make sure to exit out of chrome and force quit it.
+After all of that https will be secure in your normal chrome browser.
