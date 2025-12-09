@@ -31,7 +31,7 @@ Probably here --> cd C:\Users\{ your user name goes here }\Documents\GitHub\Comp
 
 /// go to website  ///////
 open browser and go to website
-because it is at port = 3000 go here --> http://localhost:3000/login.html
+because it is at port = 3000 go here --> https://localhost:3000/login.html
 
 //UPDATE AS OF DEC 8th for running a secure https server (this is an optional step to do)
 So does this sound okay for a step-by-step:
