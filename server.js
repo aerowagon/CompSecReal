@@ -8,6 +8,11 @@ const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const axios = require('axios');
 
+//https additions
+const https = require('https');
+const fs = require('fs');
+
+
 const port = 3000;
 
 // Parse form and JSON
@@ -69,9 +74,21 @@ const transporter = nodemailer.createTransport({
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+//app.listen(port, () => {
+  //console.log(`Server running at http://localhost:${port}/`);
+//});
+
+//https update
+const httpsOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'certs', 'localhost-key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, 'certs', 'localhost.pem')),
+};
+
+https.createServer(httpsOptions, app).listen(port, () => {
+  console.log(`HTTPS server running at https://localhost:${port}/`);
 });
+
+
 
 async function updateInfo(table, sys_ID, sess_token) {
   console.log('updating table ' + table + ' row ' + sys_ID + ' in session ' + sess_token);
@@ -305,7 +322,7 @@ app.get('/session', (req, res) => {
     console.log('no cookie found');
     return res.json({
       status: 'false',
-      info: 'http://localhost:3000/login.html'
+      info: 'https://localhost:3000/login.html'
     });
   }
 
@@ -327,7 +344,7 @@ app.get('/session', (req, res) => {
       if (authResults.length===0) {
         return res.json({
           status: 'false',
-          info: 'http://localhost:3000/login.html'
+          info: 'https://localhost:3000/login.html'
         });
 
       }
@@ -352,7 +369,7 @@ app.get('/session', (req, res) => {
           status: 'true',
           permissions,
           id,
-          info: 'http://localhost:3000/login.html'
+          info: 'https://localhost:3000/login.html'
       });
       });
     }
@@ -371,7 +388,7 @@ app.get('/session', (req, res) => {
           status: 'true',
           permissions,
           id,
-          info: 'http://localhost:3000/login.html'});
+          info: 'https://localhost:3000/login.html'});
       });
     }
   
@@ -716,7 +733,7 @@ app.get(`/logout`, (req,res) => {
       }
     );
 
-    res.json('http://localhost:3000/login.html');
+    res.json('https://localhost:3000/login.html');
     
   })
   
@@ -878,7 +895,7 @@ app.post('/request-password-reset', async (req, res) => {
         }
 
         // Create reset URL
-        const resetUrl = `http://localhost:3000/reset-password.html?token=${resetToken}`;
+        const resetUrl = `https://localhost:3000/reset-password.html?token=${resetToken}`;
 
         // Send email
         transporter.sendMail({
