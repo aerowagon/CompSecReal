@@ -32,3 +32,15 @@ Probably here --> cd C:\Users\{ your user name goes here }\Documents\GitHub\Comp
 /// go to website  ///////
 open browser and go to website
 because it is at port = 3000 go here --> http://localhost:3000/login.html
+
+//UPDATE AS OF DEC 8th for running a secure https server (this is an optional step to do)
+So does this sound okay for a step-by-step:
+To make your network certification "secure" follow these steps:
+1. I have already done this so there is a folder named certs, within that folder are two files, delete those two files then continue with these instructions:
+2. Make sure you have home brew installed
+3. Then in terminal type brew install mkcert and brew install nss
+4. Run mkcert -install
+5. run mkcert localhost
+6. This creates these two files (the ones you previously should have deleted): localhost.pem, and localhost-key.pem. Move these two files into the certs folder
+7. run nodes. sever.js and itll show you the https://localhost:3000/
+8. If you run this on your safari it should work now! :)
