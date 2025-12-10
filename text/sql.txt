@@ -78,7 +78,7 @@ USE compsec_project;
     logout_time TIMESTAMP NULL,
     logout_reason ENUM('button','timeout','browser_closed','power_loss') NULL,
     FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
-);
+    );
 
 
 -- second database

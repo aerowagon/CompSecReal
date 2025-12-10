@@ -112,7 +112,17 @@
   }
 
     async function loadStudentInfo() {
-                const id = result.id;
+    let results = null;
+    try {
+        console.log('fetching session');
+        const res = await fetch(`/session`);
+        results = await res.json();
+    } catch (err) {
+        console.error('Failed to get session:', err);
+    }
+    const id = results.id;
+    console.log(id);
+
                 try {
                 const res = await fetch(`/student-by-sysid/${id}`);
                 const student = await res.json();
@@ -141,6 +151,7 @@
         try {
             const result = await fetch(`/get_id`);
             const id = await result.json();
+            console.log(id);
             sys_ID = id;
         }   catch (err) {
             console.log('Failed to retrieve system ID')
@@ -220,6 +231,7 @@
         if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
 
         if  (checkLogin()) {
+            console.log('checking login');
             //load info
             loadStudentInfo();
         }

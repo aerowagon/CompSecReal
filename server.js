@@ -157,11 +157,13 @@ app.post('/add-user', (req, res) => {
       return res.status(500).json({ message: 'Failed to insert user' });
     }
 
+    hashUsername(email).then((hashedUsername) => {
+
     hashPassword(password).then((hashedPassword) => {
 
     // Step 2: Insert into `authentication`
     const insertAuth = 'INSERT INTO authentication (email, password) VALUES (?, ?)';
-    authdb.query(insertAuth, [email, hashedPassword], (err, authResult) => {
+    authdb.query(insertAuth, [hashedUsername, hashedPassword], (err, authResult) => {
       if (err) {
         console.error('Insert auth error:', err);
         return res.status(500).json({ message: 'Failed to insert authentication' });
@@ -233,6 +235,7 @@ app.post('/add-user', (req, res) => {
     });
     });
   });
+  })
 });
 
 app.get('/list-users', (req, res) => {
@@ -403,7 +406,7 @@ app.post('/login', (req, res) => {
 
 
   // Step 1: Check authentication
-  const authQuery = 'SELECT password FROM authentication WHERE email = ?';
+  const authQuery = 'SELECT * FROM authentication';
   authdb.query(authQuery, [email], (err, authResults) => {
     if (err) {
       console.error('Auth error:', err);
@@ -414,15 +417,19 @@ app.post('/login', (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
-    let hPassword = authResults[0].password;
-    checkPassword(password, hPassword).then((match) => {
-      if(!match) {
+    authResults.forEach((pair) => {
+      let hPassword = pair.password;
+      let hUsername = pair.email;
+      checkUsername(email, hUsername).then((matchUsername) => {
+
+      if(matchUsername) {
+            //check password match
+    checkPassword(password, hPassword).then((matchPassword) => {
+      if(!matchPassword) {
       return res.status(401).json({ message: 'Invalid email or password.' });
       }
-    
-
-
-    if(match) {
+  
+    if(matchPassword) {
     // Step 2: Get sys_ID from users table
     const userQuery = 'SELECT sys_ID FROM users WHERE email = ?';
     db.query(userQuery, [email], (err, userResults) => {
@@ -528,6 +535,9 @@ app.post('/login', (req, res) => {
     });
   }
     });
+  }
+      })
+    })
   });
 });
 
@@ -684,6 +694,7 @@ app.put('/update-student/:blugold_ID', (req, res) => {
 
 
 app.get('/student-by-sysid/:sys_ID', (req, res) => {
+  console.log('getting by ID');
   const { sys_ID } = req.params;
   const query = `
     SELECT s.*, b.account_balance, s.total_credits
