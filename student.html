@@ -121,7 +121,6 @@
         console.error('Failed to get session:', err);
     }
     const id = results.id;
-    console.log(id);
 
                 try {
                 const res = await fetch(`/student-by-sysid/${id}`);
