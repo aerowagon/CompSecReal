@@ -25,6 +25,8 @@ app.use(express.static(path.join(__dirname)));
 //use cookie parser to parse cookies yay
 app.use(cookieParser());
 
+
+
 // UPDATE LAST_SEEN ON EVERY REQUEST (heartbeat)
 app.use((req, res, next) => {
   const sess = req.cookies['session'];
@@ -421,14 +423,10 @@ app.post('/login', (req, res) => {
       let hUsername = pair.email;
 
       checkUsername(email, hUsername).then((matchUsername) => {
-        if (!matchUsername) return;
-
-        // Check password
+        if (matchUsername) {
         checkPassword(password, hPassword).then((matchPassword) => {
-          if (!matchPassword) {
-            return res.status(401).json({ message: 'Invalid email or password.' });
-          }
 
+        if(matchPassword) {
           // Step 2: Get sys_ID from users table
           const userQuery = 'SELECT sys_ID FROM users WHERE email = ?';
           db.query(userQuery, [email], (err, userResults) => {
@@ -527,7 +525,9 @@ app.post('/login', (req, res) => {
               });
             });
           });
+        }
         });
+      }
       });
     });
   });
