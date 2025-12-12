@@ -78,7 +78,7 @@ USE compsec_project;
     logout_time TIMESTAMP NULL,
     logout_reason ENUM('button','timeout','browser_closed','power_loss') NULL,
     FOREIGN KEY (sys_ID) REFERENCES users(sys_ID)
-);
+    );
 
 
 -- second database
@@ -386,10 +386,21 @@ CREATE TRIGGER students_insert
 AFTER INSERT ON students
 FOR EACH ROW
 BEGIN
-    INSERT INTO audit_log
-		( sys_ID, table_name, action_type, changed_by_email, changed_by_token, column_name, old_value, new_value)
-    VALUES 
-		(NEW.sys_ID, 'students', 'INSERT', @session_email, @session_user, 'INSERT', NULL, NEW.email );
+
+DECLARE admin_email VARCHAR(255);
+
+    -- Look up the email from the sessions table using the token
+    SELECT email 
+    INTO admin_email
+    FROM sessions
+    WHERE sess_token = @session_user
+      AND valid = b'1'   -- optional: only if you want to enforce validity
+    LIMIT 1;
+    
+INSERT INTO audit_log 
+(table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+VALUES 
+('students', 'INSERT', admin_email, @session_user, NEW.sys_ID, 'new row inserted', NULL, NEW.email);
 END //
 
 DELIMITER //
@@ -404,10 +415,20 @@ CREATE TRIGGER professors_insert
 AFTER INSERT ON professors
 FOR EACH ROW
 BEGIN
-    INSERT INTO audit_log 
-    (table_name, action_type, changed_by_email, changed_by_token, sys_ID, new_value)
-    VALUES 
-    ('professors', 'INSERT', @session_email, @session_user, NEW.sys_ID, 'added faculty');
+DECLARE admin_email VARCHAR(255);
+
+    -- Look up the email from the sessions table using the token
+    SELECT email 
+    INTO admin_email
+    FROM sessions
+    WHERE sess_token = @session_user
+      AND valid = b'1'   -- optional: only if you want to enforce validity
+    LIMIT 1;
+    
+INSERT INTO audit_log 
+(table_name, action_type, changed_by_email, changed_by_token, sys_ID, column_name, old_value, new_value)
+VALUES 
+('professors', 'INSERT', admin_email, @session_user, NEW.sys_ID, 'new row inserted', NULL, NEW.email);
 END;
 //
 DELIMITER ;
@@ -423,13 +444,4 @@ BEGIN
     ('professors', 'DELETE', @session_email, @session_user, OLD.sys_ID, 'row deleted');
 END;
 //
-DELIMITER ;CREATE TABLE password_reset_tokens (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
-    token VARCHAR(255) NOT NULL UNIQUE,
-    expires_at TIMESTAMP NOT NULL,
-    used BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_token (token),
-    INDEX idx_email_expires (email, expires_at)
-);
+DELIMITER ;

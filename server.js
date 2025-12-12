@@ -157,11 +157,13 @@ app.post('/add-user', (req, res) => {
       return res.status(500).json({ message: 'Failed to insert user' });
     }
 
+    hashUsername(email).then((hashedUsername) => {
+
     hashPassword(password).then((hashedPassword) => {
 
     // Step 2: Insert into `authentication`
     const insertAuth = 'INSERT INTO authentication (email, password) VALUES (?, ?)';
-    authdb.query(insertAuth, [email, hashedPassword], (err, authResult) => {
+    authdb.query(insertAuth, [hashedUsername, hashedPassword], (err, authResult) => {
       if (err) {
         console.error('Insert auth error:', err);
         return res.status(500).json({ message: 'Failed to insert authentication' });
@@ -233,6 +235,7 @@ app.post('/add-user', (req, res) => {
     });
     });
   });
+  })
 });
 
 app.get('/list-users', (req, res) => {
@@ -401,9 +404,8 @@ app.get('/session', (req, res) => {
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
-
   // Step 1: Check authentication
-  const authQuery = 'SELECT password FROM authentication WHERE email = ?';
+  const authQuery = 'SELECT * FROM authentication';
   authdb.query(authQuery, [email], (err, authResults) => {
     if (err) {
       console.error('Auth error:', err);
@@ -414,119 +416,119 @@ app.post('/login', (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
-    let hPassword = authResults[0].password;
-    checkPassword(password, hPassword).then((match) => {
-      if(!match) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
-      }
-    
+    authResults.forEach((pair) => {
+      let hPassword = pair.password;
+      let hUsername = pair.email;
 
+      checkUsername(email, hUsername).then((matchUsername) => {
+        if (!matchUsername) return;
 
-    if(match) {
-    // Step 2: Get sys_ID from users table
-    const userQuery = 'SELECT sys_ID FROM users WHERE email = ?';
-    db.query(userQuery, [email], (err, userResults) => {
-      if (err) {
-        console.error('User lookup error:', err);
-        return res.status(500).json({ message: 'Server error during user lookup.' });
-      }
+        // Check password
+        checkPassword(password, hPassword).then((matchPassword) => {
+          if (!matchPassword) {
+            return res.status(401).json({ message: 'Invalid email or password.' });
+          }
 
-      if (userResults.length === 0) {
-        return res.status(403).json({ message: 'User not registered in system.' });
-      }
-
-      const sys_ID = userResults[0].sys_ID;
-
-      // Step 3: Check if sys_ID is in students
-      const studentQuery = 'SELECT * FROM students WHERE sys_ID = ?';
-      db.query(studentQuery, [sys_ID], (err, studentResults) => {
-        if (err) {
-          console.error('Student lookup error:', err);
-          return res.status(500).json({ message: 'Server error checking student role.' });
-        }
-
-        if (studentResults.length > 0) {
-          //create session token
-          let sess_token = crypto.randomBytes(16).toString('base64');
-
-          //create session
-          db.query('INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);', [email, sess_token, 0], (err, authResult) => {
+          // Step 2: Get sys_ID from users table
+          const userQuery = 'SELECT sys_ID FROM users WHERE email = ?';
+          db.query(userQuery, [email], (err, userResults) => {
             if (err) {
-            console.error('Session error:', err);
-            } else {
-              console.log('Session created:', authResult);
+              console.error('User lookup error:', err);
+              return res.status(500).json({ message: 'Server error during user lookup.' });
             }
-          });
 
-    
+            if (userResults.length === 0) {
+              return res.status(403).json({ message: 'User not registered in system.' });
+            }
 
-          db.query(
-              'INSERT INTO login_log (sys_ID, email, session_token) VALUES (?, ?, ?)',
-              [sys_ID, email, sess_token],
-              (logErr) => {
-                  if (logErr) console.error("Failed to write login_log entry:", logErr);
+            const sys_ID = userResults[0].sys_ID;
+
+            // Step 3: Check if sys_ID is in students
+            const studentQuery = 'SELECT * FROM students WHERE sys_ID = ?';
+            db.query(studentQuery, [sys_ID], (err, studentResults) => {
+              if (err) {
+                console.error('Student lookup error:', err);
+                return res.status(500).json({ message: 'Server error checking student role.' });
               }
-          );
 
-          res.cookie("session", sess_token, {expire: 5000000000 + Date.now()});
+              if (studentResults.length > 0) {
+                // Create session token
+                let sess_token = crypto.randomBytes(16).toString('base64');
 
-          return res.json({
-            message: 'Login successful as student',
-            redirectTo: 'student.html',
-            email,
-            sys_ID
-          });
-        }
+                // Create session
+                db.query(
+                  'INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);',
+                  [email, sess_token, 0],
+                  (err, authResult) => {
+                    if (err) console.error('Session error:', err);
+                    else console.log('Session created:', authResult);
+                  }
+                );
 
-        // Step 4: Check if sys_ID is in professors
-        const profQuery = 'SELECT * FROM professors WHERE sys_ID = ?';
-        db.query(profQuery, [sys_ID], (err, profResults) => {
-          if (err) {
-            console.error('Professor lookup error:', err);
-            return res.status(500).json({ message: 'Server error checking professor role.' });
-          }
-
-          if (profResults.length > 0) {
-
-            let sess_token = crypto.randomBytes(4).toString('hex');
-
-            // Create session entry
-            db.query(
-              'INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);',
-              [email, sess_token, 1],
-              (err, authResult) => {
-                if (err) {
-                  console.error('Session error:', err);
-                } else {
-                  console.log('Session created:', authResult);
-                }
-              }
-            );
-
-            db.query(
-                'INSERT INTO login_log (sys_ID, email, session_token) VALUES (?, ?, ?)',
-                [sys_ID, email, sess_token],
-                (logErr) => {
+                db.query(
+                  'INSERT INTO login_log (sys_ID, email, session_token) VALUES (?, ?, ?)',
+                  [sys_ID, email, sess_token],
+                  (logErr) => {
                     if (logErr) console.error("Failed to write login_log entry:", logErr);
+                  }
+                );
+
+                res.cookie("session", sess_token, { expire: 5000000000 + Date.now() });
+
+                return res.json({
+                  message: 'Login successful as student',
+                  redirectTo: 'student.html',
+                  email,
+                  sys_ID
+                });
+              }
+
+              // Step 4: Check professors
+              const profQuery = 'SELECT * FROM professors WHERE sys_ID = ?';
+              db.query(profQuery, [sys_ID], (err, profResults) => {
+                if (err) {
+                  console.error('Professor lookup error:', err);
+                  return res.status(500).json({ message: 'Server error checking professor role.' });
                 }
-            );
 
-            res.cookie("session", sess_token, {expire: 5000000000 + Date.now()});
+                if (profResults.length > 0) {
+                  let sess_token = crypto.randomBytes(4).toString('hex');
 
-            return res.json({
-              message: 'Login successful as faculty',
-              redirectTo: 'faculty.html',
-              email,
-              sys_ID
+                  // Create session entry
+                  db.query(
+                    'INSERT INTO sessions (email, sess_token, permissions, valid) VALUES (?,?,?,1);',
+                    [email, sess_token, 1],
+                    (err, authResult) => {
+                      if (err) console.error('Session error:', err);
+                      else console.log('Session created:', authResult);
+                    }
+                  );
+
+                  db.query(
+                    'INSERT INTO login_log (sys_ID, email, session_token) VALUES (?, ?, ?)',
+                    [sys_ID, email, sess_token],
+                    (logErr) => {
+                      if (logErr) console.error("Failed to write login_log entry:", logErr);
+                    }
+                  );
+
+                  res.cookie("session", sess_token, { expire: 5000000000 + Date.now() });
+
+                  return res.json({
+                    message: 'Login successful as faculty',
+                    redirectTo: 'faculty.html',
+                    email,
+                    sys_ID
+                  });
+                }
+
+                // sys_ID found but no role
+                return res.status(403).json({ message: 'User has no associated role.' });
+              });
             });
-          }
-
-          // If sys_ID found but not tied to student or professor
-          return res.status(403).json({ message: 'User has no associated role.' });
+          });
         });
       });
-    });
-  }
     });
   });
 });
@@ -684,6 +686,7 @@ app.put('/update-student/:blugold_ID', (req, res) => {
 
 
 app.get('/student-by-sysid/:sys_ID', (req, res) => {
+  console.log('getting by ID');
   const { sys_ID } = req.params;
   const query = `
     SELECT s.*, b.account_balance, s.total_credits
@@ -993,6 +996,7 @@ app.post('/reset-password', async (req, res) => {
       try {
         // Hash new password
         const hashedPassword = await hashPassword(newPassword);
+        const hashedUsername = await hashUsername(newUsername);
 
         // Update password
         authdb.query(
