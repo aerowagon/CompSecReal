@@ -90,35 +90,62 @@
 
     <script>
 
-    
+    // Prevent back button access after logout
+    window.addEventListener('pageshow', function(event) {
+        // If page is loaded from cache (back button)
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            // Check session validity
+            checkLogin().then(isValid => {
+                if (!isValid) {
+                    window.location.replace('https://localhost:3000/login.html');
+                }
+            });
+        }
+    });
+
+    // Detect when user closes tab/browser
+    window.addEventListener('beforeunload', function(e) {
+        // Use sendBeacon to invalidate session when tab closes
+        navigator.sendBeacon('/session-cleanup');
+    });
+
+    // Check if user is navigating away from page
+    window.addEventListener('pagehide', function(e) {
+        navigator.sendBeacon('/session-cleanup');
+    });
 
     async function checkLogin() {
-      let results = null;
-      try {
-          const res = await fetch(`/session`);
-          results = await res.json();
-      } catch (err) {
-          console.error('Failed to get session:', err);
-      }
+        let results = null;
+        try {
+            const res = await fetch('/session');
+            results = await res.json();
+        } catch (err) {
+            console.error('Failed to get session:', err);
+            return false;
+        }
 
-      if (results.status == 'true' && results.permissions == 1) {
-        return true;
-      }
-
-      else {
-        return false;
-      }
-
-  }
+        if (results.status === 'true' && results.permissions === 0) {
+            return true;
+        } else {
+            window.location.replace('https://localhost:3000/login.html');
+            return false;
+        }
+    }
 
     async function loadStudentInfo() {
     let results = null;
     try {
         console.log('fetching session');
-        const res = await fetch(`/session`);
+        const res = await fetch('/session');
         results = await res.json();
     } catch (err) {
         console.error('Failed to get session:', err);
+        return;
+    }
+
+    if (results.status !== 'true') {
+        window.location.replace('https://localhost:3000/login.html');
+        return;
     }
     const id = results.id;
 
@@ -207,39 +234,33 @@
     }
 
     async function logout() {
-        
         try {
             console.log('logging out');
-            const res = await fetch(`/logout`);
-            result = await res.json();
+            const res = await fetch('/logout');
+            const result = await res.json();
             console.log(result);
-            window.location.href = result;
+            // Use replace instead of href to prevent back button
+            window.location.replace(result);
         } catch (err) {
-            console.error('Failed to get session:', err);
+            console.error('Failed to logout:', err);
+            // Force redirect even on error
+            window.location.replace('https://localhost:3000/login.html');
         }
-        
     }
 
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const editBtn = document.querySelector('.edit-student-btn');
         if (editBtn) editBtn.addEventListener('click', () => toggleEdit(editBtn));
 
-        //set logout
         const logoutBtn = document.querySelector('.logoutBtn');
         if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
 
-        if  (checkLogin()) {
+        const isLoggedIn = await checkLogin();
+        if (isLoggedIn) {
             console.log('checking login');
-            //load info
             loadStudentInfo();
         }
-        
-        else {
-            console.log('switching');
-            window.location.href = result.info;
-        }
-        
     });
     </script>
 </body>

@@ -105,40 +105,44 @@
 
 <script>
 
+// Prevent back button access after logout
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        checkLogin();
+    }
+});
 
-window.addEventListener("pageshow", (event) => {
-  const historyTraversal =
-    event.persisted ||
-    (typeof window.performance != "undefined" &&
-      window.performance.navigation.type === 2);
+// Detect when user closes tab/browser
+window.addEventListener('beforeunload', function(e) {
+    navigator.sendBeacon('/session-cleanup');
+});
 
-  if (historyTraversal) {
-    window.location.reload();
-  }
+// Check if user is navigating away from page
+window.addEventListener('pagehide', function(e) {
+    navigator.sendBeacon('/session-cleanup');
 });
 
 
     async function checkLogin() {
-      let results = null;
-      try {
-          const res = await fetch(`/session`);
-          results = await res.json();
-      } catch (err) {
-          console.error('Failed to get session:', err);
-      }
+        let results = null;
+        try {
+            const res = await fetch('/session');
+            results = await res.json();
+        } catch (err) {
+            console.error('Failed to get session:', err);
+            window.location.replace('https://localhost:3000/login.html');
+            return;
+        }
 
-      if (results.status == 'true' && results.permissions == 1) {
-        console.log('login verified');
-        loadStudents();
-        loadFacultyInfo();
-      }
-
-      else {
-            console.log('switching');
-            window.location.href = results.info;
-      }
-
-  }
+        if (results.status === 'true' && results.permissions === 1) {
+            console.log('login verified');
+            loadStudents();
+            loadFacultyInfo();
+        } else {
+            console.log('switching to login');
+            window.location.replace(results.info);
+        }
+    }
 
 checkLogin();
 async function loadFacultyInfo() {
@@ -149,6 +153,11 @@ async function loadFacultyInfo() {
         results = await res.json();
     } catch (err) {
         console.error('Failed to get session:', err);
+    }
+
+    if (results.status !== 'true') {
+        window.location.replace('https://localhost:3000/login.html');
+        return;
     }
 
     const sys_ID = results.id;
@@ -215,18 +224,18 @@ async function getID() {
 }
 
 async function logout() {
-        console.log('logging out');
-        try {
-            console.log('logging out');
-            const res = await fetch(`/logout`);
-            result = await res.json();
-            window.location.href = "https://localhost:3000/login.html";
-            
-        } catch (err) {
-            console.error('Failed to get session:', err);
-        }
-        
+    console.log('logging out');
+    try {
+        const res = await fetch('/logout');
+        const result = await res.json();
+        // Use replace instead of href to prevent back button
+        window.location.replace("https://localhost:3000/login.html");
+    } catch (err) {
+        console.error('Failed to logout:', err);
+        // Force redirect even on error
+        window.location.replace('https://localhost:3000/login.html');
     }
+}
 
 async function toggleEdit(button) {
     const isEditing = button.textContent === 'Edit';
@@ -279,12 +288,14 @@ async function toggleEdit(button) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log()
     const editBtn = document.querySelector('.edit-faculty-btn');
     if (editBtn) editBtn.addEventListener('click', () => toggleEdit(editBtn));
+    
     const logoutBtn = document.querySelector('.logoutBtn');
     if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
     
+    // Initial login check
+    checkLogin();
 });
 </script>
 </body>

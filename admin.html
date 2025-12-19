@@ -128,34 +128,32 @@
 
   <script>
 
-        window.addEventListener("pageshow", (event) => {
-  const historyTraversal =
-    event.persisted ||
-    (typeof window.performance != "undefined" &&
-      window.performance.navigation.type === 2);
+  // Prevent back button access after logout or closing
+  window.addEventListener('pageshow', function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+          checkLogin();
+      }
+  });
 
-  if (historyTraversal) {
-    window.location.reload();
-  }
-})
+
 
     async function checkLogin() {
       let results = null;
       try {
-          const res = await fetch(`/session`);
+          const res = await fetch('/session');
           results = await res.json();
       } catch (err) {
           console.error('Failed to get session:', err);
+          window.location.replace('https://localhost:3000/login.html');
+          return;
       }
 
-      if (results.status == 'true' && results.permissions == 1) {
-        return true;
+      if (results.status === 'true' && results.permissions === 1) {
+          return true;
+      } else {
+          window.location.replace('https://localhost:3000/login.html');
+          return false;
       }
-
-      else {
-        window.location.href = 'https://localhost:3000/login.html';
-      }
-
   }
   
 
@@ -212,6 +210,11 @@
         messageDiv.style.color = 'red';
         messageDiv.textContent = 'Server error. Please try again.';
       }
+    });
+
+    // Check login on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        checkLogin();
     });
   </script>
 </body>

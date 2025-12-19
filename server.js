@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const path = require('path');
 const app = express();
 const cookieParser = require('cookie-parser');
@@ -37,7 +37,13 @@ app.use((req, res, next) => {
   next();
 });
 
-
+// SECURITY: Prevent caching of authenticated pages
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
 
 // Connect to MySQL
 const db = mysql.createConnection({
@@ -318,7 +324,6 @@ app.get('/student/:blugold_ID', (req, res) => {
 
 ///autologin for page
 app.get('/session', (req, res) => {
-
   const cookie = req.cookies['session'];
 
   if (!cookie) {
@@ -330,73 +335,67 @@ app.get('/session', (req, res) => {
   }
 
   else {
-    //check cookie
     const sess_token = cookie;
     let permissions = null;
 
-    //check for session token in database
-    const query = 'SELECT permissions, email FROM sessions WHERE sess_token = ? AND valid = 1;';
+    // Check for session token AND validity
+    const query = 'SELECT permissions, email, valid FROM sessions WHERE sess_token = ? AND valid = 1;';
     db.query(query, [sess_token], (err, authResults) => {
-      
-
       if(err) {
         console.error('Auth error:', err);
         return res.status(500).json({ message: 'Server error during session verification.' });
       }
 
-      if (authResults.length===0) {
+      // If no valid session found, clear the cookie
+      if (authResults.length === 0) {
+        res.clearCookie("session");
         return res.json({
           status: 'false',
           info: 'https://localhost:3000/login.html'
         });
-
       }
 
       permissions = authResults[0].permissions;
       
+      // Check to see if user is a professor
+      if (permissions == 1) {
+        const query = 'SELECT sys_ID FROM professors WHERE email = ?';
+        db.query(query, [authResults[0].email], (error, result) => {
+          if(error) {
+            console.error('DB error:', error);
+            return res.status(500).json({ message: 'Server error during sys_ID retrieval.' });
+          }
 
-    
-    //check to see if user is a professor
-    if (permissions==1) {
-      const query = 'SELECT sys_ID FROM professors WHERE email = ?';
-      db.query(query, [authResults[0].email], (error, result) => {
-        if(error) {
-          console.error('DB error:', err);
-          return res.status(500).json({ message: 'Server error during sys_ID retrieval.' });
-        }
+          id = result[0].sys_ID;
+          return res.json({
+            status: 'true',
+            permissions,
+            id,
+            info: 'https://localhost:3000/login.html'
+          });
+        });
+      }
 
-        //return permissions and id
-        id = result[0].sys_ID;
-        console.log(id);
-        return res.json({
-          status: 'true',
-          permissions,
-          id,
-          info: 'https://localhost:3000/login.html'
-      });
-      });
-    }
-
-    //see if user is a student
-    if (permissions==0) {
-      const query = 'SELECT sys_ID FROM students WHERE email = ?';
-      db.query(query, [authResults[0].email], (error, result) => { 
-        if(error) {
-          console.error('DB error:', err);
-          return res.status(500).json({ message: 'Server error during permissions retrieval.' });
-        }
-        //return permissions and id
-        id = result[0].sys_ID;
-        return res.json({
-          status: 'true',
-          permissions,
-          id,
-          info: 'https://localhost:3000/login.html'});
-      });
-    }
-  
+      // See if user is a student
+      if (permissions == 0) {
+        const query = 'SELECT sys_ID FROM students WHERE email = ?';
+        db.query(query, [authResults[0].email], (error, result) => { 
+          if(error) {
+            console.error('DB error:', error);
+            return res.status(500).json({ message: 'Server error during permissions retrieval.' });
+          }
+          
+          id = result[0].sys_ID;
+          return res.json({
+            status: 'true',
+            permissions,
+            id,
+            info: 'https://localhost:3000/login.html'
+          });
+        });
+      }
     });
-}
+  }
 });
 
 /////////// login page  /////////////
@@ -711,38 +710,57 @@ app.get('/student-by-sysid/:sys_ID', (req, res) => {
 
 
 //////logout////
-app.get(`/logout`, (req,res) => {
+app.get('/logout', (req, res) => {
   const sess = req.cookies['session'];
+  
+  // Clear cookie immediately
   res.clearCookie("session");
-  const query = `
-    UPDATE sessions
-    SET valid = 0
-    WHERE sess_token = ?
-  `;
+  
+  if (sess) {
+    const query = `UPDATE sessions SET valid = 0 WHERE sess_token = ?`;
 
-  db.query(query, [sess], (err,results) => {
-    if (err) {
-      console.error('Failed to log out', err);
-      return res.status(500).json({ message: 'Database error' });
-    }
+    db.query(query, [sess], (err, results) => {
+      if (err) {
+        console.error('Failed to log out', err);
+        return res.status(500).json({ message: 'Database error' });
+      }
 
+      db.query(
+        `UPDATE login_log
+        SET logout_time = NOW(), logout_reason = 'button'
+        WHERE session_token = ? AND logout_time IS NULL`,
+        [sess],
+        (err) => {
+          if (err) console.error("Failed to update login_log on logout:", err);
+        }
+      );
+
+      res.json('https://localhost:3000/login.html');
+    });
+  } else {
+    res.json('https://localhost:3000/login.html');
+  }
+});
+
+// Session cleanup for tab/browser close
+app.post('/session-cleanup', (req, res) => {
+  const sess = req.cookies['session'];
+  
+  if (sess) {
+    db.query("UPDATE sessions SET valid = 0 WHERE sess_token = ?", [sess]);
+    
     db.query(
       `UPDATE login_log
-      SET logout_time = NOW(), logout_reason = 'button'
-      WHERE session_token = ? AND logout_time IS NULL`,
-      [sess],
-      (err) => {
-        if (err) console.error("Failed to update login_log on logout:", err);
-      }
+       SET logout_time = NOW(),
+           logout_reason = 'browser_closed'
+       WHERE session_token = ?
+         AND logout_time IS NULL`,
+      [sess]
     );
-
-    res.json('https://localhost:3000/login.html');
-    
-  })
+  }
   
-})
-
-
+  res.sendStatus(204); // No content
+});
 
 //returns id if logged in
 app.get(`/get_id`, (req,res) => {
