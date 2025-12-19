@@ -57,3 +57,74 @@ localhost-key.pem
 11. Force-quit Chrome completely, and then open it back up, and it should work!
 
 
+- \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+Group 5 Final Report 
+
+Team Members:  
+
+James Gale, Victor Herbert, Jarett Nelson, Maggie Johnson 
+
+Attacks on computer systems can come from many paths, so multiple layers of defense are required. The implementation of certificates for the World Wide Web (WWW) and SSL/TLS prevents eavesdropping and Man-in-the-Middle attacks. Encrypting usernames and passwords prevents credential theft and protects user privacy if the database is compromised. CAPTCHA protects against automated bot attacks, while heartbeat monitoring and automatic logoff improve server-side security. Together, these and many other mechanisms defend the system against both automated and human-driven attacks. 
+
+ 
+
+HTTPS 
+
+Our server utilizes Hypertext Transfer Protocol Secure (HTTPS), which provides encrypted communication over a computer network. HTTPS is an improvement over its predecessor, HTTP, by ensuring data confidentiality and integrity. A self-signed TLS certificate is generated and stored in the /certs directory. HTTPS uses this certificate along with a private key to prevent Man-in-the-Middle (MITM) attacks. This is especially important for protecting login credentials and session cookies, which are encrypted during transmission. 
+
+ 
+
+Hashing for Password and Username 
+
+Hashing prevents passwords from being stored or transmitted as plaintext. The bcrypt library is used, and each password is hashed using a salt factor of 10 before being stored in the database. A salt is additional random data added to strengthen the hash. During login, the entered password is compared to the stored hash using bcrypt’s compare function. This ensures that even if the database is compromised, user passwords remain protected. Bcrypt also provides strong resistance against rainbow tables and brute-force attacks. 
+
+Usernames (email addresses) are also hashed before being stored in the authentication database and are verified similarly during login. This prevents direct email enumeration and adds an extra layer of privacy protection. 
+
+ 
+
+Session-Based Authentication with Secure Tokens 
+
+After a successful login, a cryptographically secure random session token is generated. This token is stored in the sessions table in the database and sent to the client as a cookie. The session token is verified for every protected action. When a user logs out or the session expires, the token is invalidated and can no longer be used. This approach eliminates the need to repeatedly send passwords with each request, improving both security and user experience. 
+
+ 
+
+Role-Based Access Control (RBAC) 
+
+The system currently supports two roles: student and faculty. Role-Based Access Control ensures users can only access functionality appropriate to their role. This protects sensitive data and administrative features from unauthorized users and prevents students from accessing faculty-only or administrative operations. 
+
+ 
+
+reCAPTCHA 
+
+Protection against automated attacks is essential for modern web applications. Google reCAPTCHA is used to prevent automated login and password-reset attacks. The client receives a reCAPTCHA token, which is then verified on the server using Google’s API. This ensures that requests are coming from legitimate users and not bots. 
+
+ 
+
+Secure Password Reset Mechanism 
+
+The password reset feature allows users to securely reset their password if it is forgotten. Users must first pass a reCAPTCHA verification and provide their email address. A cryptographically secure reset token is generated, hashed, and stored in the database with an expiration time. The token is sent to the user via email. The user must access the link and reset their password before the token expires. This design prevents token reuse, account enumeration, and automated attacks. 
+
+ 
+
+Audit Logging with Database Triggers 
+
+Database triggers are used to log important changes to the system. These triggers capture INSERT, UPDATE, and DELETE operations and record the user’s session token and email address. The logs can be viewed through the system interface. This ensures system integrity, enables forensic analysis, and provides non-repudiation by recording who performed each action. 
+
+ 
+
+Automatic Session Timeout 
+
+Automatic session timeouts reduce the risk associated with abandoned or stolen sessions. Each request updates the session’s “last seen” timestamp. If a session remains inactive for too long (2 minutes of inactivity, checked every 5 minutes), it is automatically invalidated and logged out. This helps protect against insider threats and unauthorized session reuse keeping the server-side security safe. 
+
+ 
+
+Secure Frontend Practices 
+
+The frontend was designed to reduce the risk of code injection and malicious input. Input fields are restricted to appropriate data types and validated before being sent to the server. These measures help protect the server and database from attacks such as SQL injection and malformed requests. 
+
+ 
+
+Conclusion 
+
+This project implements multiple layers of security, including HTTPS, hashing, session management, role-based access control, reCAPTCHA, audit logging, and automatic session expiration. Each mechanism is implemented using industry-standard tools and best practices, resulting in a secure, reliable, and auditable web application. 
