@@ -1,0 +1,130 @@
+Computer Security Project how to Run Code 
+
+By: James Gale, Victor Herbert, Maggie Johnson, Jarett Nelson  
+
+How to run the code: 
+
+- Required Software 
+    1. Before beginning, make sure the following software is installed on your computer: Node.js (used to run the backend server. Available at https://nodejs.org), and XAMPP (used to host the MySQL database) 
+    2. After installation, open the XAMPP Control Panel and start both Apache and MySQL 
+- Open the Project in Visual Studio Code 
+    1. Open VS-Code, select “file,” then “open folder,” and choose the folder containing this project
+    2. You may see files with old_fileName.fileType, just ignore them as they are references for us however not used in the set up or execution of the code
+- Create the Databases in XAMPP 
+    1. Open phpMyAdmin by clicking “Admin” next to MySQL in the XAMPP Control Panel. Then go to the sql.txt file and copy paste the contents into the XAMPP sql terminal
+- Run the Server 
+    1. In Visual Studio Code, pull up the terminal, and in it type “npm install” then:
+		npm install bcrypt
+        npm install cookie-parser
+        npm install crypto
+        npm install axios
+        npm install body-parser
+        npm install nodemailer
+    2. Write “node server.js” to start the server. The terminal will then display a message like “Server running at https://localhost:3000/” copy this link 
+- Open a Web Application (like Google) 
+    1.Paste the link into a browser, however before pressing enter add “/login.html” to the end of the link so that the login page opens first. For example: https://localhost:3000/login.html 
+- Logging In 
+    1. To log in as a faculty member, use the following credentials: 
+        Email: faculty1@uwec.edu 
+        Password: faculty 
+    2. After logging in, the Faculty Dashboard will appear. From this page, faculty members can: view their own information, create new student or faculty accounts, and view or edit student academic information. When finished, click the “Logout” button 
+    3. To log in as a student, use the following credentials: 
+        Email: fakestudent1@uwec.edu 
+        Password: student 
+    4. After logging in, the Student Dashboard will appear. From this page, students can: update their personal information and view academic information (which cannot be edited by students). When finished, click the “Logout” button 
+
+OPTIONAL - follow these steps to make https server secure
+
+ These steps are only needed if the user wants a fully trusted local HTTPS certificate. (aka if you dont want it to say “Not Secure” at the top of the page). Also there is a chance that it will already be secure, however google and its cookies are weird so you may have to do these steps and may not. 
+1. Go to the file cert, and delete these files: 
+localhost.pem
+localhost-key.pem
+2. If on mac download homebrew
+3. In terminal write: 
+	brew install mkcert
+brew install nss
+4. Then in terminal write:
+	mkcert -install
+This will generate new localhost certificates:
+	localhost.pem
+localhost-key.pem
+5. Move those files into the project’s certs folder
+6. Start the server by writing: “node server.js”, and go to your browser and type “https://localhost:3000/login.html”
+7. Google Chrome (because of its own security measures and cookies) may still flag this as being unsecure, however if you go to a different browser (I did safari) or go to incognito mode it'll be secure. However if you want google chrome to normally see it as secure you will have to clear your catch data.
+8. Make sure the server is not running (control c to stop it), and then go to your google browser and go to this website: chrome://net-internals/#hsts
+9. Under Delete domain security policies type: localhost
+10. Hit delete
+11. Force-quit Chrome completely, and then open it back up, and it should work!
+
+
+- \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+Group 5 Final Report 
+
+Team Members:  
+
+James Gale, Victor Herbert, Jarett Nelson, Maggie Johnson 
+
+Attacks on computer systems can come from many paths, so multiple layers of defense are required. The implementation of certificates for the World Wide Web (WWW) and SSL/TLS prevents eavesdropping and Man-in-the-Middle attacks. Encrypting usernames and passwords prevents credential theft and protects user privacy if the database is compromised. CAPTCHA protects against automated bot attacks, while heartbeat monitoring and automatic logoff improve server-side security. Together, these and many other mechanisms defend the system against both automated and human-driven attacks. 
+
+ 
+
+HTTPS 
+
+Our server utilizes Hypertext Transfer Protocol Secure (HTTPS), which provides encrypted communication over a computer network. HTTPS is an improvement over its predecessor, HTTP, by ensuring data confidentiality and integrity. A self-signed TLS certificate is generated and stored in the /certs directory. HTTPS uses this certificate along with a private key to prevent Man-in-the-Middle (MITM) attacks. This is especially important for protecting login credentials and session cookies, which are encrypted during transmission. 
+
+ 
+
+Hashing for Password and Username 
+
+Hashing prevents passwords from being stored or transmitted as plaintext. The bcrypt library is used, and each password is hashed using a salt factor of 10 before being stored in the database. A salt is additional random data added to strengthen the hash. During login, the entered password is compared to the stored hash using bcrypt’s compare function. This ensures that even if the database is compromised, user passwords remain protected. Bcrypt also provides strong resistance against rainbow tables and brute-force attacks. 
+
+Usernames (email addresses) are also hashed before being stored in the authentication database and are verified similarly during login. This prevents direct email enumeration and adds an extra layer of privacy protection. 
+
+ 
+
+Session-Based Authentication with Secure Tokens 
+
+After a successful login, a cryptographically secure random session token is generated. This token is stored in the sessions table in the database and sent to the client as a cookie. The session token is verified for every protected action. When a user logs out or the session expires, the token is invalidated and can no longer be used. This approach eliminates the need to repeatedly send passwords with each request, improving both security and user experience. 
+
+ 
+
+Role-Based Access Control (RBAC) 
+
+The system currently supports two roles: student and faculty. Role-Based Access Control ensures users can only access functionality appropriate to their role. This protects sensitive data and administrative features from unauthorized users and prevents students from accessing faculty-only or administrative operations. 
+
+ 
+
+reCAPTCHA 
+
+Protection against automated attacks is essential for modern web applications. Google reCAPTCHA is used to prevent automated login and password-reset attacks. The client receives a reCAPTCHA token, which is then verified on the server using Google’s API. This ensures that requests are coming from legitimate users and not bots. 
+
+ 
+
+Secure Password Reset Mechanism 
+
+The password reset feature allows users to securely reset their password if it is forgotten. Users must first pass a reCAPTCHA verification and provide their email address. A cryptographically secure reset token is generated, hashed, and stored in the database with an expiration time. The token is sent to the user via email. The user must access the link and reset their password before the token expires. This design prevents token reuse, account enumeration, and automated attacks. 
+
+ 
+
+Audit Logging with Database Triggers 
+
+Database triggers are used to log important changes to the system. These triggers capture INSERT, UPDATE, and DELETE operations and record the user’s session token and email address. The logs can be viewed through the system interface. This ensures system integrity, enables forensic analysis, and provides non-repudiation by recording who performed each action. 
+
+ 
+
+Automatic Session Timeout 
+
+Automatic session timeouts reduce the risk associated with abandoned or stolen sessions. Each request updates the session’s “last seen” timestamp. If a session remains inactive for too long (2 minutes of inactivity, checked every 5 minutes), it is automatically invalidated and logged out. This helps protect against insider threats and unauthorized session reuse keeping the server-side security safe. 
+
+ 
+
+Secure Frontend Practices 
+
+The frontend was designed to reduce the risk of code injection and malicious input. Input fields are restricted to appropriate data types and validated before being sent to the server. These measures help protect the server and database from attacks such as SQL injection and malformed requests. 
+
+ 
+
+Conclusion 
+
+This project implements multiple layers of security, including HTTPS, hashing, session management, role-based access control, reCAPTCHA, audit logging, and automatic session expiration. Each mechanism is implemented using industry-standard tools and best practices, resulting in a secure, reliable, and auditable web application. 
