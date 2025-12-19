@@ -1,0 +1,59 @@
+Computer Security Project how to Run Code 
+
+By: James Gale, Victor Herbert, Maggie Johnson, Jarett Nelson  
+
+How to run the code: 
+
+- Required Software 
+    1. Before beginning, make sure the following software is installed on your computer: Node.js (used to run the backend server. Available at https://nodejs.org), and XAMPP (used to host the MySQL database) 
+    2. After installation, open the XAMPP Control Panel and start both Apache and MySQL 
+- Open the Project in Visual Studio Code 
+    1. Open VS-Code, select “file,” then “open folder,” and choose the folder containing this project
+    2. You may see files with old_fileName.fileType, just ignore them as they are references for us however not used in the set up or execution of the code
+- Create the Databases in XAMPP 
+    1. Open phpMyAdmin by clicking “Admin” next to MySQL in the XAMPP Control Panel. Then go to the sql.txt file and copy paste the contents into the XAMPP sql terminal
+- Run the Server 
+    1. In Visual Studio Code, pull up the terminal, and in it type “npm install” then:
+		npm install bcrypt
+        npm install cookie-parser
+        npm install crypto
+        npm install axios
+        npm install body-parser
+        npm install nodemailer
+    2. Write “node server.js” to start the server. The terminal will then display a message like “Server running at https://localhost:3000/” copy this link 
+- Open a Web Application (like Google) 
+    1.Paste the link into a browser, however before pressing enter add “/login.html” to the end of the link so that the login page opens first. For example: https://localhost:3000/login.html 
+- Logging In 
+    1. To log in as a faculty member, use the following credentials: 
+        Email: faculty1@uwec.edu 
+        Password: faculty 
+    2. After logging in, the Faculty Dashboard will appear. From this page, faculty members can: view their own information, create new student or faculty accounts, and view or edit student academic information. When finished, click the “Logout” button 
+    3. To log in as a student, use the following credentials: 
+        Email: fakestudent1@uwec.edu 
+        Password: student 
+    4. After logging in, the Student Dashboard will appear. From this page, students can: update their personal information and view academic information (which cannot be edited by students). When finished, click the “Logout” button 
+
+OPTIONAL - follow these steps to make https server secure
+
+ These steps are only needed if the user wants a fully trusted local HTTPS certificate. (aka if you dont want it to say “Not Secure” at the top of the page). Also there is a chance that it will already be secure, however google and its cookies are weird so you may have to do these steps and may not. 
+1. Go to the file cert, and delete these files: 
+localhost.pem
+localhost-key.pem
+2. If on mac download homebrew
+3. In terminal write: 
+	brew install mkcert
+brew install nss
+4. Then in terminal write:
+	mkcert -install
+This will generate new localhost certificates:
+	localhost.pem
+localhost-key.pem
+5. Move those files into the project’s certs folder
+6. Start the server by writing: “node server.js”, and go to your browser and type “https://localhost:3000/login.html”
+7. Google Chrome (because of its own security measures and cookies) may still flag this as being unsecure, however if you go to a different browser (I did safari) or go to incognito mode it'll be secure. However if you want google chrome to normally see it as secure you will have to clear your catch data.
+8. Make sure the server is not running (control c to stop it), and then go to your google browser and go to this website: chrome://net-internals/#hsts
+9. Under Delete domain security policies type: localhost
+10. Hit delete
+11. Force-quit Chrome completely, and then open it back up, and it should work!
+
+
